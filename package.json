@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Сайт ателье с админ-панелью",
   "main": "server.js",
+  "bothost": {
+    "type": "web",
+    "entry": "server.js",
+    "port": 3000
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"

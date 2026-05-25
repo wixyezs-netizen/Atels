@@ -6,9 +6,12 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const INDEX_HTML = path.join(PUBLIC_DIR, 'index.html');
+const ADMIN_HTML = path.join(PUBLIC_DIR, 'admin.html');
 const DATA_DIR = path.join(__dirname, 'data');
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
 
 const FILES = {
   settings: path.join(DATA_DIR, 'settings.json'),
@@ -113,6 +116,21 @@ initData();
 
 const app = express();
 app.set('trust proxy', 1);
+
+app.get('/health', (_req, res) => {
+  res.json({
+    ok: true,
+    port: PORT,
+    publicDir: fs.existsSync(PUBLIC_DIR),
+    indexHtml: fs.existsSync(INDEX_HTML),
+    uptime: Math.floor(process.uptime()),
+  });
+});
+
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 app.use(express.json({ limit: '2mb' }));
 app.use(
@@ -370,19 +388,60 @@ ${urls
   res.send(xml);
 });
 
-// ——— Статика ———
-app.use('/uploads', express.static(UPLOADS_DIR));
-app.use(express.static(path.join(__dirname, 'public')));
+function sendPage(res, filePath) {
+  if (!fs.existsSync(filePath)) {
+    return res.status(500).send(
+      `<h1>Ошибка деплоя</h1><p>Не найден файл: ${filePath}</p>` +
+        '<p>Загрузите на Bothost всю папку <code>public/</code> вместе с server.js.</p>'
+    );
+  }
+  res.sendFile(filePath, (err) => {
+    if (err) res.status(500).send('Ошибка отдачи страницы');
+  });
+}
 
-app.get('/admin', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
+// ——— Статика и страницы ———
+app.get('/', (_req, res) => sendPage(res, INDEX_HTML));
+app.get('/index.html', (_req, res) => sendPage(res, INDEX_HTML));
+app.get('/admin', (_req, res) => sendPage(res, ADMIN_HTML));
+app.get('/admin/', (_req, res) => res.redirect(301, '/admin'));
+
+app.use('/uploads', express.static(UPLOADS_DIR));
+app.use(express.static(PUBLIC_DIR, { index: false }));
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  sendPage(res, INDEX_HTML);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Ателье-сайт: http://0.0.0.0:${PORT}`);
+app.use((req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API не найден' });
+  }
+  res.status(404).send('Страница не найдена');
+});
+
+const HOST = process.env.HOST || '0.0.0.0';
+
+function checkDeployFiles() {
+  const ok = fs.existsSync(INDEX_HTML);
+  if (!ok) {
+    console.error('ОШИБКА: нет public/index.html — в Git должна быть папка public/');
+  }
+  return ok;
+}
+
+app.listen(PORT, HOST, () => {
+  checkDeployFiles();
+  const publicUrl = (process.env.SITE_URL || process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  console.log('Ателье-сайт запущен');
+  console.log(`  Порт: ${PORT} (слушает ${HOST}) — в панели Bothost поле «Порт» = ${PORT}`);
+  console.log(`  Проверка: /health`);
+  if (publicUrl) {
+    console.log(`  Сайт: ${publicUrl}`);
+    console.log(`  Админ: ${publicUrl}/admin`);
+  } else {
+    console.log(`  Локально: http://127.0.0.1:${PORT}`);
+    console.log('  Bothost: включите «Использовать домен», откройте *.bothost.tech из панели');
+  }
 });
