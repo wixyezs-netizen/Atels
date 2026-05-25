@@ -315,7 +315,7 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
 
 app.patch('/api/admin/orders/:id', requireAdmin, (req, res) => {
   const orders = readJson(FILES.orders, { counter: 0, items: [] });
-  const item = orders.items.find((o) o.id === req.params.id);
+  const item = orders.items.find((o) => o.id === req.params.id);
   if (!item) return res.status(404).json({ error: 'Не найдено' });
   const statuses = ['waiting', 'in_progress', 'done', 'cancelled'];
   if (req.body.status && statuses.includes(req.body.status)) {
