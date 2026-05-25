@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Админ-панель — Ателье</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+  <div id="login-screen" class="login-wrap">
+    <div class="login-box">
+      <h1>Вход в админ-панель</h1>
+      <form id="login-form">
+        <div class="form-row">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Войти</button>
+        <p id="login-error" style="color:#b91c1c;font-size:0.9rem;margin-top:0.75rem;display:none"></p>
+      </form>
+      <p style="font-size:0.8rem;color:#888;margin-top:1rem">По умолчанию: admin123 — смените после входа</p>
+    </div>
+  </div>
+
+  <div id="admin-app" class="admin-layout hidden">
+    <aside class="sidebar">
+      <h2>Ателье Admin</h2>
+      <nav>
+        <a href="#" data-panel="orders" class="active">Очередь</a>
+        <a href="#" data-panel="services">Услуги</a>
+        <a href="#" data-panel="settings">Настройки</a>
+        <a href="#" data-panel="seo">SEO и связь</a>
+        <a href="#" data-panel="security">Безопасность</a>
+        <a href="#" id="logout-btn">Выйти</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <section class="panel active" id="panel-orders">
+        <h2>Очередь на сегодня</h2>
+        <div class="card">
+          <div class="form-row" style="max-width:200px">
+            <label>Дата</label>
+            <input type="date" id="orders-date">
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="queue-open-toggle">
+            Приём записей открыт
+          </label>
+        </div>
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Имя</th>
+              <th>Телефон</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+      </section>
+
+      <section class="panel" id="panel-services">
+        <h2>Услуги и карточки</h2>
+        <button class="btn btn-primary" id="add-service-btn">+ Добавить услугу</button>
+        <div class="services-admin-list" id="services-admin-list" style="margin-top:1rem"></div>
+      </section>
+
+      <section class="panel" id="panel-settings">
+        <h2>Основные настройки</h2>
+        <form id="settings-form" class="card">
+          <div class="grid-2">
+            <div class="form-row">
+              <label>Название ателье</label>
+              <input type="text" name="siteName" id="siteName">
+            </div>
+            <div class="form-row">
+              <label>Слоган</label>
+              <input type="text" name="tagline" id="tagline">
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Описание (для сайта и SEO)</label>
+            <textarea name="description" id="description"></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="form-row">
+              <label>Телефон</label>
+              <input type="text" name="phone" id="phone">
+            </div>
+            <div class="form-row">
+              <label>Email</label>
+              <input type="email" name="email" id="email">
+            </div>
+            <div class="form-row">
+              <label>Адрес</label>
+              <input type="text" name="address" id="address">
+            </div>
+            <div class="form-row">
+              <label>Часы работы</label>
+              <input type="text" name="workHours" id="workHours">
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Макс. записей в день</label>
+            <input type="number" name="maxQueuePerDay" id="maxQueuePerDay" min="1" max="200">
+          </div>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+      </section>
+
+      <section class="panel" id="panel-seo">
+        <h2>SEO и мессенджеры</h2>
+        <form id="seo-form" class="card">
+          <div class="form-row">
+            <label>URL сайта (для sitemap и Google)</label>
+            <input type="url" name="siteUrl" id="siteUrl" placeholder="https://ваш-домен.ru">
+          </div>
+          <div class="form-row">
+            <label>Ключевые слова (через запятую)</label>
+            <textarea name="seoKeywords" id="seoKeywords"></textarea>
+          </div>
+          <h3 style="margin-top:1.5rem">Связь и соцсети</h3>
+          <div class="grid-2">
+            <div class="form-row">
+              <label>Telegram (ссылка или @username)</label>
+              <input type="text" name="telegram" id="telegram">
+            </div>
+            <div class="form-row">
+              <label>WhatsApp (номер или ссылка)</label>
+              <input type="text" name="whatsapp" id="whatsapp">
+            </div>
+            <div class="form-row">
+              <label>ВКонтакте</label>
+              <input type="url" name="vk" id="vk">
+            </div>
+            <div class="form-row">
+              <label>Instagram</label>
+              <input type="url" name="instagram" id="instagram">
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Google Search Console — код верификации (content)</label>
+            <input type="text" name="googleSiteVerification" id="googleSiteVerification" placeholder="код из meta-тега">
+          </div>
+          <div class="form-row">
+            <label>Google Analytics ID (G-XXXX)</label>
+            <input type="text" name="googleAnalytics" id="googleAnalytics">
+          </div>
+          <div class="form-row">
+            <label>Яндекс.Метрика ID</label>
+            <input type="text" name="yandexMetrika" id="yandexMetrika">
+          </div>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <p style="font-size:0.85rem;color:#666;margin-top:1rem">
+            После публикации: добавьте сайт в <a href="https://search.google.com/search-console" target="_blank" rel="noopener">Google Search Console</a>
+            и укажите sitemap: <code id="sitemap-hint">/sitemap.xml</code>
+          </p>
+        </form>
+      </section>
+
+      <section class="panel" id="panel-security">
+        <h2>Смена пароля</h2>
+        <form id="password-form" class="card" style="max-width:400px">
+          <div class="form-row">
+            <label>Новый пароль</label>
+            <input type="password" id="new-password" minlength="6" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Обновить пароль</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <div id="service-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:300;padding:1rem">
+    <div class="card" style="max-width:520px;width:100%;max-height:90vh;overflow:auto">
+      <h3 id="modal-title">Редактирование услуги</h3>
+      <input type="hidden" id="edit-service-id">
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" id="edit-title">
+      </div>
+      <div class="form-row">
+        <label>Описание</label>
+        <textarea id="edit-description"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Цена</label>
+        <input type="text" id="edit-price" placeholder="от 1000 ₽">
+      </div>
+      <div class="form-row">
+        <label>Фото</label>
+        <input type="file" id="edit-image-file" accept="image/*">
+        <img id="edit-image-preview" src="" alt="" style="max-width:100%;margin-top:0.5rem;border-radius:6px;display:none">
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="edit-published" checked>
+        Опубликовано на сайте
+      </label>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem">
+        <button class="btn btn-primary" id="save-service-btn">Сохранить</button>
+        <button class="btn" id="close-modal-btn" style="background:#ddd">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
