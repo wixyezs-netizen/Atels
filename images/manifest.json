@@ -1,0 +1,18 @@
+{
+  "source": "https://tvil.ru/city/golubickaya/hotels/1170033/",
+  "photos": [
+    { "src": "https://hmd.tvil.ru/tmp/20220607/t2/4712590.avif", "title": "DVIN — территория", "category": "territory" },
+    { "src": "https://hmd.tvil.ru/tmp/20210514/t2/3177849.avif", "title": "DVIN — двор", "category": "territory" },
+    { "src": "https://hmd.tvil.ru/tmp/20210514/t2/3177857.avif", "title": "DVIN — зелёный двор", "category": "territory" },
+    { "src": "https://hmd.tvil.ru/tmp/20210514/t2/3177862.avif", "title": "DVIN — бассейн", "category": "territory" },
+    { "src": "https://hmd.tvil.ru/tmp/20210514/t2/3177880.avif", "title": "Студия", "category": "rooms" },
+    { "src": "https://hmd.tvil.ru/tmp/20210514/t2/3177886.avif", "title": "Номер", "category": "rooms" },
+    { "src": "https://hmd.tvil.ru/tmp/20220531/t2/4643765.avif", "title": "Комфорт", "category": "rooms" },
+    { "src": "https://hmd.tvil.ru/tmp/20240611/t2/7297569.avif", "title": "Интерьер", "category": "interior" },
+    { "src": "https://hmd.tvil.ru/tmp/20240731/t2/7463337.avif", "title": "Кухонная зона", "category": "interior" },
+    { "src": "https://hmd.tvil.ru/tmp/20210517/t2/3183775.avif", "title": "Люкс", "category": "rooms" },
+    { "src": "https://hmd.tvil.ru/tmp/20230724/t2/6317156.avif", "title": "DVIN — дом", "category": "house" },
+    { "src": "https://hmd.tvil.ru/tmp/20220521/t2/4551967.avif", "title": "Беседка и отдых", "category": "territory" },
+    { "src": "https://hmd.tvil.ru/tmp/20230629/u2/6212782.jpeg", "title": "Гостевой дом DVIN", "category": "house" }
+  ]
+}
