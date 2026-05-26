@@ -37,6 +37,10 @@
       }
       const addr = document.getElementById('contact-address');
       if (addr) addr.innerHTML = `<strong>Адрес:</strong> ${esc(s.region || '')}, ${esc(s.address || '')}<br><strong>Море:</strong> ${esc(s.seaDistance || '')}`;
+      const heroImg = document.getElementById('hero-img');
+      if (heroImg && s.heroImage) {
+        heroImg.src = s.heroImage + (s.heroImage.includes('?') ? '&' : '?') + 'v=1';
+      }
       const heroLead = document.querySelector('.hero__lead');
       if (heroLead && s.description) heroLead.textContent = s.description;
       const aboutP = document.querySelector('.about__text p');

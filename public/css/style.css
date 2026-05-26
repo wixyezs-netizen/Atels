@@ -233,15 +233,16 @@ a {
 .hero__bg {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(165deg, rgba(26, 51, 68, 0.72) 0%, rgba(61, 92, 74, 0.5) 45%, rgba(28, 36, 32, 0.82) 100%),
-    #1a3344 center / cover no-repeat;
-  animation: heroKenBurns 22s ease-in-out infinite alternate;
+  overflow: hidden;
+  background: #1a3344;
 }
 
-@keyframes heroKenBurns {
-  from { transform: scale(1); }
-  to { transform: scale(1.08); }
+.hero__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  display: block;
 }
 
 .hero__overlay {

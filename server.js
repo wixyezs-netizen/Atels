@@ -7,7 +7,9 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const SITE_BUILD = 'dvin-v4-booking-admin';
+const SITE_BUILD = 'dvin-v4-listen-fix';
+/** Пока нет файла public/images/hero.jpg — показываем это фото (можно заменить в админке). */
+const DEFAULT_HERO_IMAGE = 'https://hmd.tvil.ru/tmp/20230629/u2/6212782.jpeg';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const INDEX_HTML = path.join(PUBLIC_DIR, 'index.html');
 const ADMIN_HTML = path.join(PUBLIC_DIR, 'admin.html');
@@ -64,6 +66,7 @@ function defaultSettings() {
     googleSiteVerification: '',
     bookingOpen: true,
     reviewsOpen: true,
+    heroImage: DEFAULT_HERO_IMAGE,
     adminPasswordHash: '',
   };
 }
@@ -251,7 +254,11 @@ function initData() {
   loadGalleryManifest();
 }
 
-initData();
+try {
+  initData();
+} catch (err) {
+  console.error('initData:', err.message);
+}
 
 const app = express();
 app.set('trust proxy', 1);
@@ -305,9 +312,19 @@ function requireAdmin(req, res, next) {
   res.status(401).json({ error: 'Требуется авторизация' });
 }
 
+function resolveHeroUrl(heroImage) {
+  const raw = heroImage || DEFAULT_HERO_IMAGE;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const rel = String(raw).replace(/^\//, '');
+  const local = path.join(PUBLIC_DIR, rel);
+  if (fs.existsSync(local)) return raw.startsWith('/') ? raw : `/${rel}`;
+  return DEFAULT_HERO_IMAGE;
+}
+
 function publicSettings() {
   const s = readJson(FILES.settings, defaultSettings());
   const { adminPasswordHash, ...rest } = s;
+  rest.heroImage = resolveHeroUrl(s.heroImage);
   return rest;
 }
 
@@ -460,7 +477,7 @@ app.put('/api/admin/settings', requireAdmin, (req, res) => {
     'siteName', 'tagline', 'description', 'phone', 'email', 'address', 'region', 'seaDistance',
     'workHours', 'checkIn', 'checkOut', 'telegram', 'whatsapp', 'vk', 'instagram', 'siteUrl',
     'seoKeywords', 'yandexMetrika', 'googleAnalytics', 'googleSiteVerification',
-    'bookingOpen', 'reviewsOpen',
+    'bookingOpen', 'reviewsOpen', 'heroImage',
   ];
   allowed.forEach((k) => {
     if (req.body[k] !== undefined) current[k] = req.body[k];
@@ -659,7 +676,21 @@ app.use((req, res) => {
   res.status(404).send('Не найдено');
 });
 
-app.listen(process.env.HOST || '0.0.0.0', PORT, () => {
-  console.log(`DVIN ${SITE_BUILD} → порт ${PORT}`);
-  console.log(`  Сайт: /  Админ: /admin  Health: /health`);
+const HOST = process.env.HOST || '0.0.0.0';
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`DVIN ${SITE_BUILD} → http://${HOST}:${PORT}`);
+  console.log('  Сайт: /  Админ: /admin  Health: /health');
+});
+
+server.on('error', (err) => {
+  console.error('Ошибка запуска сервера:', err);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('uncaughtException:', err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('unhandledRejection:', err);
 });

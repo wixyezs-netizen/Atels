@@ -6,7 +6,6 @@
   const THUMBS = document.getElementById('overview-thumbs');
   const FEATURED = document.getElementById('featured-img');
   const FEATURED_BTN = document.getElementById('featured-main');
-  const HERO_BG = document.getElementById('hero-bg');
   const ABOUT_MAIN = document.getElementById('about-main');
   const ABOUT_ACCENT = document.getElementById('about-accent');
   const EMPTY = document.getElementById('gallery-empty');
@@ -82,18 +81,17 @@
 
   function applySiteImages() {
     const p = (i) => photos[i]?.src;
-    if (HERO_BG && p(0)) HERO_BG.style.backgroundImage = `url('${url(p(0))}')`;
-    if (ABOUT_MAIN && p(1)) ABOUT_MAIN.style.backgroundImage = `url('${url(p(1))}')`;
-    if (ABOUT_ACCENT && p(2)) ABOUT_ACCENT.style.backgroundImage = `url('${url(p(2))}')`;
+    if (ABOUT_MAIN && p(0)) ABOUT_MAIN.style.backgroundImage = `url('${url(p(0))}')`;
+    if (ABOUT_ACCENT && p(1)) ABOUT_ACCENT.style.backgroundImage = `url('${url(p(1))}')`;
     document.querySelectorAll('.room-card__img').forEach((el, i) => {
-      const src = p(3 + i) || p(i % photos.length);
+      const src = p(3 + i) || p((i + 3) % photos.length);
       if (src) el.style.backgroundImage = `url('${url(src)}')`;
     });
   }
 
   function buildMarquee() {
     if (!MARQUEE) return;
-    MARQUEE.innerHTML = [...photos, ...photos]
+    MARQUEE.innerHTML = photos
       .map((ph) => `<div class="marquee__item"><img src="${url(ph.src)}" alt="" loading="lazy"></div>`)
       .join('');
   }

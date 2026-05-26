@@ -371,6 +371,7 @@
       ['siteUrl', 'URL сайта'],
       ['bookingOpen', 'Бронирование открыто', false, 'checkbox'],
       ['reviewsOpen', 'Приём отзывов', false, 'checkbox'],
+      ['heroImage', 'Фото шапки (URL)', true],
     ];
     $('#settings-form').innerHTML = fields
       .map(([key, label, full, type]) => {
