@@ -74,9 +74,18 @@ function requestJson(urlStr) {
         Referer: process.env.TVIL_REFERER || 'https://tvil.ru/owner/reserve/',
         // В вашем запросе присутствует derived-from: front_v3
         'Derived-From': process.env.TVIL_DERIVED_FROM || 'front_v3',
+        'Priority': process.env.TVIL_PRIORITY || 'u=1, i',
+        'sec-ch-ua':
+          process.env.TVIL_SEC_CH_UA ||
+          '"Chromium";v="146", "Not-A.Brand";v="24", "YaBrowser";v="26.4", "Yowser";v="2.5"',
+        'sec-ch-ua-mobile': process.env.TVIL_SEC_CH_UA_MOBILE || '?0',
+        'sec-ch-ua-platform': process.env.TVIL_SEC_CH_UA_PLATFORM || '"Windows"',
+        'sec-fetch-dest': process.env.TVIL_SEC_FETCH_DEST || 'empty',
+        'sec-fetch-mode': process.env.TVIL_SEC_FETCH_MODE || 'cors',
+        'sec-fetch-site': process.env.TVIL_SEC_FETCH_SITE || 'same-origin',
         'User-Agent':
           process.env.TVIL_USER_AGENT ||
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36',
         'X-Requested-With': 'XMLHttpRequest',
         ...(auth ? { Authorization: auth } : {}),
       },

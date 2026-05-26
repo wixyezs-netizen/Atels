@@ -11,7 +11,7 @@ const tvilMail = require('./tvil-mail');
 const tvilApi = require('./tvil-api');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const SITE_BUILD = 'dvin-v12-tvil-headers-derived';
+const SITE_BUILD = 'dvin-v13-tvil-browser-headers';
 /** Пока нет файла public/images/hero.jpg — показываем это фото (можно заменить в админке). */
 const DEFAULT_HERO_IMAGE = 'https://hmd.tvil.ru/tmp/20230629/u2/6212782.jpeg';
 const PUBLIC_DIR = path.join(__dirname, 'public');
