@@ -3,6 +3,7 @@
  */
 const https = require('https');
 const http = require('http');
+const zlib = require('zlib');
 
 /** Счётчики как в личном кабинете TVIL (запрос reserves/badges). */
 const WATCH_COUNTERS = [
@@ -54,6 +55,7 @@ function requestJson(urlStr) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlStr);
     const lib = url.protocol === 'https:' ? https : http;
+    const auth = (process.env.TVIL_AUTHORIZATION || '').trim();
     const opts = {
       hostname: url.hostname,
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
@@ -64,59 +66,84 @@ function requestJson(urlStr) {
         Accept: 'application/vnd.api+json',
         'Content-Type': 'application/vnd.api+json',
         'Accept-Language': 'ru-RU,ru;q=0.9',
+        // В DevTools часто видно gzip. Node корректно читает content-encoding, мы распаковываем если надо.
+        'Accept-Encoding': 'gzip, deflate, br',
         Cookie: getCookie(),
         Origin: 'https://tvil.ru',
-        Referer: process.env.TVIL_REFERER || 'https://tvil.ru/owner/',
+        // В вашем запросе Referer: https://tvil.ru/owner/reserve/
+        Referer: process.env.TVIL_REFERER || 'https://tvil.ru/owner/reserve/',
+        // В вашем запросе присутствует derived-from: front_v3
+        'Derived-From': process.env.TVIL_DERIVED_FROM || 'front_v3',
         'User-Agent':
           process.env.TVIL_USER_AGENT ||
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'X-Requested-With': 'XMLHttpRequest',
+        ...(auth ? { Authorization: auth } : {}),
       },
     };
 
     const req = lib.request(opts, (res) => {
-      let body = '';
-      res.on('data', (c) => {
-        body += c;
-      });
+      const chunks = [];
+      res.on('data', (c) => chunks.push(Buffer.from(c)));
       res.on('end', () => {
-        const ct = res.headers['content-type'] || '';
-        if (res.statusCode === 401 || res.statusCode === 403) {
+        const status = res.statusCode || 0;
+        const ct = String(res.headers['content-type'] || '');
+        const enc = String(res.headers['content-encoding'] || '').toLowerCase();
+        const loc = res.headers.location;
+
+        if ([301, 302, 303, 307, 308].includes(status)) {
+          return reject(
+            new Error(
+              `TVIL HTTP ${status}: редирект на ${loc || '(unknown)'} (скорее всего нужно скопировать Authorization из DevTools или обновить cookie)`
+            )
+          );
+        }
+
+        const raw = Buffer.concat(chunks);
+        const decode = () => {
+          try {
+            if (enc === 'gzip') return zlib.gunzipSync(raw);
+            if (enc === 'deflate') return zlib.inflateSync(raw);
+            if (enc === 'br' && typeof zlib.brotliDecompressSync === 'function') return zlib.brotliDecompressSync(raw);
+          } catch (_) {}
+          return raw;
+        };
+        const body = decode().toString('utf8').trim();
+
+        if (status === 401 || status === 403) {
           return reject(new Error('TVIL: сессия истекла — обновите TVIL_COOKIE'));
         }
-        if (res.statusCode >= 400) {
+        if (status >= 400) {
           // Часто TVIL возвращает JSON:API errors даже на 4xx — пробуем распарсить, чтобы показать причину.
-          const trimmedErr = body.trim();
-          if (trimmedErr && !trimmedErr.startsWith('<')) {
+          if (body && !body.startsWith('<')) {
             try {
-              const j = JSON.parse(trimmedErr);
+              const j = JSON.parse(body);
               const first =
                 j?.errors?.[0]?.title ||
                 j?.errors?.[0]?.detail ||
                 j?.message ||
-                trimmedErr.slice(0, 160);
-              return reject(new Error(`TVIL HTTP ${res.statusCode}: ${String(first)}`));
+                body.slice(0, 160);
+              return reject(new Error(`TVIL HTTP ${status}: ${String(first)}`));
             } catch (_) {}
           }
-          return reject(new Error(`TVIL HTTP ${res.statusCode}: ${trimmedErr.slice(0, 160).replace(/\s+/g, ' ')}`));
+          return reject(new Error(`TVIL HTTP ${status}: ${body.slice(0, 160).replace(/\s+/g, ' ')}`));
         }
-        const trimmed = body.trim();
-        if (!trimmed) {
+        if (!body) {
           return reject(new Error('TVIL API: пустой ответ'));
         }
-        if (trimmed.startsWith('<') || /text\/html/i.test(ct)) {
+        if (body.startsWith('<') || /text\/html/i.test(ct)) {
           return reject(
             new Error(
-              `TVIL вернул HTML вместо JSON. Скопируйте Request URL запроса badges в DevTools → TVIL_API_BASE. Фрагмент: ${trimmed.slice(0, 80)}`
+              `TVIL вернул HTML вместо JSON. Проверьте DevTools → badges → Request Headers: возможно есть Authorization. Фрагмент: ${body.slice(0, 80)}`
             )
           );
         }
         try {
-          resolve(JSON.parse(trimmed));
+          resolve(JSON.parse(body));
         } catch {
           reject(
             new Error(
-              `TVIL API: не JSON (${ct}). Проверьте TVIL_API_BASE и cookie. Начало: ${trimmed.slice(0, 100)}`
+              `TVIL API: не JSON (${ct || 'no-ct'}; enc=${enc || 'none'}). Проверьте TVIL_API_BASE и cookie. Начало: ${body.slice(0, 100)}`
             )
           );
         }
