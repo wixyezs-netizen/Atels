@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DVIN — гостевой дом в Голубицкой, от 2000 ₽/ночь</title>
-  <meta name="description" content="Жилой дом DVIN в Голубицкой: студия, комфорт и люкс. 700 м до моря, бассейн, Wi‑Fi. 35 отзывов, рейтинг 5.0. Бронирование на ТВИЛ.">
+  <meta name="description" content="Жилой дом DVIN в Голубицкой: студия, комфорт и люкс. 700 м до моря. Онлайн-бронирование и отзывы.">
   <meta name="keywords" content="гостевой дом Голубицкая, DVIN, отдых на море, жильё у моря">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=20260525b">
+  <link rel="stylesheet" href="/css/style.css?v=20260525c">
 </head>
-<body data-site="dvin-v3">
+<body data-site="dvin-v4">
   <header class="header" id="header">
     <div class="container header__inner">
       <a href="#" class="logo">
@@ -24,6 +24,7 @@
         <a href="#amenities">Удобства</a>
         <a href="#overview">Обзор</a>
         <a href="#gallery">Галерея</a>
+        <a href="#reviews">Отзывы</a>
         <a href="#location">Как добраться</a>
       </nav>
       <a href="#booking" class="btn btn--primary header__cta">Забронировать</a>
@@ -45,13 +46,13 @@
           Спокойный отдых у Азовского моря — магазины и кафе в шаговой доступности.
         </p>
         <div class="hero__actions">
-          <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" class="btn btn--primary btn--lg" target="_blank" rel="noopener">Забронировать на ТВИЛ</a>
-          <a href="#overview" class="btn btn--ghost btn--lg">59 фото</a>
+          <a href="#booking" class="btn btn--primary btn--lg">Забронировать</a>
+          <a href="#overview" class="btn btn--ghost btn--lg">Смотреть фото</a>
         </div>
-        <div class="hero__stats">
+        <div class="hero__stats" id="hero-stats">
           <div><strong>3</strong><span>категории</span></div>
           <div><strong>700 м</strong><span>до моря</span></div>
-          <div><strong>★ 5.0</strong><span>35 отзывов</span></div>
+          <div><strong id="hero-rating">★ 5.0</strong><span id="hero-reviews-count">отзывы</span></div>
         </div>
       </div>
       <a href="#about" class="hero__scroll" aria-label="Вниз">
@@ -66,7 +67,7 @@
           <div class="about__img about__img--accent" id="about-accent"></div>
           <div class="about__badge">
             <span>★ 5.0</span>
-            <small>Безупречно на ТВИЛ</small>
+            <small>гостевой дом</small>
           </div>
         </div>
         <div class="about__text">
@@ -96,55 +97,10 @@
         <div class="section-head">
           <span class="section-label">Номера</span>
           <h2>Выберите своё пространство</h2>
-          <p>Три категории номеров с удобствами — цена зависит от дат, уточняйте на ТВИЛ.</p>
+          <p>Студия, комфорт и люкс — бронируйте прямо на сайте.</p>
         </div>
-        <div class="rooms__grid rooms__grid--3">
-          <article class="room-card">
-            <div class="room-card__img room-card__img--1"></div>
-            <div class="room-card__body">
-              <div class="room-card__top">
-                <h3>Студия</h3>
-                <span class="room-card__price">от 2 000 ₽</span>
-              </div>
-              <p>1 этаж, 21 м², двуспальная кровать, своя кухня</p>
-              <ul class="room-card__tags">
-                <li>1–3 гостя</li>
-                <li>Wi‑Fi · фен · холодильник</li>
-              </ul>
-              <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" class="room-card__link" target="_blank" rel="noopener">Забронировать →</a>
-            </div>
-          </article>
-          <article class="room-card room-card--featured">
-            <span class="room-card__badge">С балконом</span>
-            <div class="room-card__img room-card__img--2"></div>
-            <div class="room-card__body">
-              <div class="room-card__top">
-                <h3>Комфорт</h3>
-                <span class="room-card__price">уточняйте даты</span>
-              </div>
-              <p>16 м², двуспальная кровать, балкон</p>
-              <ul class="room-card__tags">
-                <li>1–4 гостя</li>
-                <li>Кондиционер · Wi‑Fi</li>
-              </ul>
-              <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" class="room-card__link" target="_blank" rel="noopener">Забронировать →</a>
-            </div>
-          </article>
-          <article class="room-card">
-            <div class="room-card__img room-card__img--3"></div>
-            <div class="room-card__body">
-              <div class="room-card__top">
-                <h3>Люкс</h3>
-                <span class="room-card__price">уточняйте даты</span>
-              </div>
-              <p>1 этаж, 18 м², двуспальная кровать</p>
-              <ul class="room-card__tags">
-                <li>1–4 гостя</li>
-                <li>Кондиционер · фен</li>
-              </ul>
-              <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" class="room-card__link" target="_blank" rel="noopener">Забронировать →</a>
-            </div>
-          </article>
+        <div class="rooms__grid rooms__grid--3" id="rooms-grid">
+          <p class="rooms-loading">Загрузка номеров…</p>
         </div>
       </div>
     </section>
@@ -215,32 +171,33 @@
       <div class="lightbox__counter" id="lightbox-counter"></div>
     </div>
 
-    <section class="section reviews">
+    <section class="section reviews" id="reviews">
       <div class="container">
-        <p class="reviews__badge reveal">★ 5.0 · Безупречно · 35 отзывов на <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" target="_blank" rel="noopener">ТВИЛ</a></p>
-        <div class="reviews__slider" id="reviews">
-          <blockquote class="review review--active">
-            <p>«Всё очень понравилось, были с собакой, номер со своей кухней. До моря рукой подать.»</p>
-            <footer>— Алина · ★ 5.0</footer>
-          </blockquote>
-          <blockquote class="review">
-            <p>«Дом соответствует фото, двор утопает в зелени! За такую стоимость очень неплохо!»</p>
-            <footer>— Юлия, Воронеж · ★ 5.0</footer>
-          </blockquote>
-          <blockquote class="review">
-            <p>«Отлично отдохнули, море недалеко. Приедем снова. Рекомендую!»</p>
-            <footer>— Мария, Псков · ★ 4.4</footer>
-          </blockquote>
-          <blockquote class="review">
-            <p>«С ребёнком и собакой. Во дворе беседка, мангал, 2 бассейна.»</p>
-            <footer>— Алёна, Москва · ★ 4.6</footer>
-          </blockquote>
-        </div>
-        <div class="reviews__dots" id="review-dots">
-          <button class="active" aria-label="1"></button>
-          <button aria-label="2"></button>
-          <button aria-label="3"></button>
-          <button aria-label="4"></button>
+        <p class="reviews__badge reveal" id="reviews-badge">Загрузка отзывов…</p>
+        <div class="reviews__slider" id="reviews"></div>
+        <div class="reviews__dots" id="review-dots"></div>
+
+        <div class="review-form-wrap reveal">
+          <h3>Оставить отзыв</h3>
+          <form class="review-form" id="review-form">
+            <div class="form-row form-row--2">
+              <label>Имя<input type="text" name="name" required></label>
+              <label>Город<input type="text" name="city" placeholder="необязательно"></label>
+            </div>
+            <label>Оценка
+              <select name="rating" required>
+                <option value="5">★★★★★</option>
+                <option value="4">★★★★</option>
+                <option value="3">★★★</option>
+                <option value="2">★★</option>
+                <option value="1">★</option>
+              </select>
+            </label>
+            <label>Номер<input type="text" name="roomTitle" placeholder="Студия, Комфорт…"></label>
+            <label>Отзыв<textarea name="text" rows="3" required placeholder="Поделитесь впечатлениями"></textarea></label>
+            <button type="submit" class="btn btn--primary">Отправить отзыв</button>
+            <p class="form-msg hidden" id="review-form-msg"></p>
+          </form>
         </div>
       </div>
     </section>
@@ -260,7 +217,9 @@
             <li><span>Центр</span> ~ 1,2 км</li>
           </ul>
           <div class="location__contacts">
-            <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" class="btn btn--primary" target="_blank" rel="noopener">Забронировать на ТВИЛ</a>
+            <a href="tel:+79001234567" id="contact-phone">+7 (900) 123-45-67</a>
+            <a href="mailto:hello@dvin-house.ru" id="contact-email">hello@dvin-house.ru</a>
+            <a href="#booking" class="btn btn--primary">Забронировать</a>
           </div>
         </div>
         <div class="location__map">
@@ -273,18 +232,30 @@
       <div class="container booking__inner">
         <div class="booking__info">
           <span class="section-label section-label--light">Бронирование</span>
-          <h2>Забронируйте DVIN</h2>
-          <p>Официальное бронирование — на <strong>ТВИЛ</strong>.</p>
-          <a href="https://tvil.ru/city/golubickaya/hotels/1170033/" class="btn btn--primary btn--lg booking__tvil" target="_blank" rel="noopener">Открыть на ТВИЛ →</a>
+          <h2>Забронируйте номер</h2>
+          <p>Оставьте заявку — мы перезвоним и подтвердим бронь. Заезд после 14:00, выезд до 11:00.</p>
+          <p class="booking__note">Оплата и детали согласуем по телефону после подтверждения.</p>
         </div>
-        <div class="booking__card">
-          <h3>Номера</h3>
-          <ul class="booking__rooms">
-            <li><strong>Студия</strong> — 21 м², от 2 000 ₽</li>
-            <li><strong>Комфорт</strong> — 16 м², балкон</li>
-            <li><strong>Люкс</strong> — 18 м²</li>
-          </ul>
-        </div>
+        <form class="booking__card booking__form-full" id="booking-form">
+          <div class="form-row form-row--2">
+            <label><span>Заезд</span><input type="date" name="checkin" required></label>
+            <label><span>Выезд</span><input type="date" name="checkout" required></label>
+          </div>
+          <label><span>Номер</span><select name="roomId" id="booking-room" required><option value="">Загрузка…</option></select></label>
+          <p class="booking-estimate" id="booking-estimate"></p>
+          <div class="form-row form-row--2">
+            <label><span>Имя</span><input type="text" name="name" required></label>
+            <label><span>Телефон</span><input type="tel" name="phone" required placeholder="+7 …"></label>
+          </div>
+          <div class="form-row form-row--2">
+            <label><span>Email</span><input type="email" name="email" placeholder="необязательно"></label>
+            <label><span>Гостей</span><input type="number" name="guests" min="1" max="6" value="2" required></label>
+          </div>
+          <label><span>Пожелания</span><textarea name="message" rows="2" placeholder="Дети, животные, поздний заезд…"></textarea></label>
+          <button type="submit" class="btn btn--primary btn--lg btn--full">Отправить заявку</button>
+          <p class="form-msg hidden" id="booking-msg"></p>
+          <p class="form-success hidden" id="booking-success"></p>
+        </form>
       </div>
     </section>
   </main>
@@ -296,12 +267,13 @@
       <nav class="footer__nav">
         <a href="#rooms">Номера</a>
         <a href="#booking">Бронь</a>
-        <a href="#location">Контакты</a>
+        <a href="/admin">Админ</a>
       </nav>
     </div>
   </footer>
 
-  <script src="/js/gallery.js?v=20260525b"></script>
-  <script src="/js/main.js?v=20260525b"></script>
+  <script src="/js/gallery.js?v=20260525c"></script>
+  <script src="/js/site.js?v=20260525c"></script>
+  <script src="/js/main.js?v=20260525c"></script>
 </body>
 </html>

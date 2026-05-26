@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Админ — DVIN</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div id="login-screen" class="login-wrap">
+    <form class="login-box" id="login-form">
+      <h1>DVIN Admin</h1>
+      <label>Пароль<input type="password" id="password" required autocomplete="current-password"></label>
+      <button type="submit" class="btn btn--primary">Войти</button>
+      <p id="login-error" class="error hidden"></p>
+    </form>
+  </div>
+
+  <div id="admin-app" class="layout hidden">
+    <aside class="sidebar">
+      <div class="sidebar__brand">DVIN</div>
+      <nav>
+        <a href="#" data-panel="dashboard" class="active">Обзор</a>
+        <a href="#" data-panel="bookings">Бронирования <span class="badge" id="badge-bookings"></span></a>
+        <a href="#" data-panel="reviews">Отзывы <span class="badge" id="badge-reviews"></span></a>
+        <a href="#" data-panel="rooms">Номера</a>
+        <a href="#" data-panel="gallery">Галерея</a>
+        <a href="#" data-panel="settings">Настройки</a>
+        <a href="#" data-panel="security">Пароль</a>
+        <a href="/" target="_blank">Открыть сайт ↗</a>
+        <a href="#" id="logout-btn">Выйти</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <section class="panel active" id="panel-dashboard">
+        <h1>Панель управления</h1>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="panel" id="panel-bookings">
+        <h1>Бронирования</h1>
+        <div class="toolbar">
+          <select id="filter-booking-status">
+            <option value="">Все статусы</option>
+            <option value="pending">Ожидают</option>
+            <option value="confirmed">Подтверждены</option>
+            <option value="completed">Завершены</option>
+            <option value="cancelled">Отменены</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="bookings-table">
+            <thead>
+              <tr>
+                <th>Даты</th><th>Номер</th><th>Гость</th><th>Телефон</th><th>Сумма</th><th>Статус</th><th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-reviews">
+        <h1>Отзывы</h1>
+        <div class="toolbar">
+          <select id="filter-review-status">
+            <option value="">Все</option>
+            <option value="pending">На модерации</option>
+            <option value="published">Опубликованы</option>
+            <option value="rejected">Отклонены</option>
+          </select>
+        </div>
+        <div id="reviews-list" class="cards"></div>
+      </section>
+
+      <section class="panel" id="panel-rooms">
+        <h1>Номера</h1>
+        <button class="btn btn--primary" id="add-room-btn">+ Добавить номер</button>
+        <div id="rooms-list" class="cards"></div>
+      </section>
+
+      <section class="panel" id="panel-gallery">
+        <h1>Галерея</h1>
+        <p class="hint">Загрузите фото и укажите категорию. Сохраните список.</p>
+        <div class="toolbar">
+          <input type="file" id="gallery-upload" accept="image/*">
+          <button class="btn btn--primary" id="save-gallery-btn">Сохранить галерею</button>
+        </div>
+        <div id="gallery-admin" class="gallery-admin"></div>
+      </section>
+
+      <section class="panel" id="panel-settings">
+        <h1>Настройки сайта</h1>
+        <form id="settings-form" class="form-grid"></form>
+        <button type="submit" form="settings-form" class="btn btn--primary">Сохранить</button>
+      </section>
+
+      <section class="panel" id="panel-security">
+        <h1>Смена пароля</h1>
+        <form id="password-form" class="form-narrow">
+          <label>Новый пароль<input type="password" id="new-password" minlength="6" required></label>
+          <button type="submit" class="btn btn--primary">Обновить</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal__box">
+      <h3 id="modal-title">Редактирование</h3>
+      <div id="modal-body"></div>
+      <div class="modal__actions">
+        <button class="btn btn--primary" id="modal-save">Сохранить</button>
+        <button class="btn" id="modal-close">Отмена</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

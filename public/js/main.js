@@ -21,8 +21,6 @@
   const burger = document.getElementById('burger');
   const nav = document.getElementById('nav');
   const year = document.getElementById('year');
-  const form = document.getElementById('booking-form');
-
   if (year) year.textContent = new Date().getFullYear();
 
   window.addEventListener('scroll', () => {
@@ -41,18 +39,4 @@
     });
   });
 
-  const reviews = document.querySelectorAll('.review');
-  const dots = document.querySelectorAll('#review-dots button');
-  let idx = 0;
-
-  function showReview(i) {
-    reviews.forEach((r, j) => r.classList.toggle('review--active', j === i));
-    dots.forEach((d, j) => d.classList.toggle('active', j === i));
-    idx = i;
-  }
-
-  dots.forEach((btn, i) => btn.addEventListener('click', () => showReview(i)));
-  if (reviews.length) {
-    setInterval(() => showReview((idx + 1) % reviews.length), 6000);
-  }
 })();

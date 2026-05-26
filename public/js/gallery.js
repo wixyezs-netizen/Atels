@@ -26,10 +26,18 @@
 
   async function loadPhotos() {
     try {
-      const res = await fetch('/images/manifest.json');
-      if (!res.ok) throw new Error('no manifest');
-      const data = await res.json();
-      photos = (data.photos || data).filter((p) => p.src && !p.src.includes('logo'));
+      const apiRes = await fetch('/api/gallery');
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        photos = (data.photos || []).filter((p) => p.src);
+      }
+      if (!photos.length) {
+        const res = await fetch('/images/manifest.json');
+        if (res.ok) {
+          const data = await res.json();
+          photos = (data.photos || data).filter((p) => p.src && !String(p.src).includes('logo'));
+        }
+      }
       const local = await tryDiscoverImages();
       if (local.length > 0) photos = local;
     } catch (_) {
@@ -37,7 +45,7 @@
     }
     if (!photos.length) {
       EMPTY?.classList.remove('hidden');
-      if (EMPTY) EMPTY.textContent = 'Фото загружаются с ТВИЛ… обновите страницу';
+      if (EMPTY) EMPTY.textContent = 'Добавьте фото в админ-панели /admin';
       return;
     }
     EMPTY?.classList.add('hidden');
