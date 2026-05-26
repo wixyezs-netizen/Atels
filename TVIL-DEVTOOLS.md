@@ -44,12 +44,16 @@ badges?isClient=0&counter=arrival-today,...
 Справа:
 - **Заголовки** → **Request URL** — скопируйте до `/badges` (без `?`):
 
-Пример: если URL  
-`https://tvil.ru/api/v1/badges?isClient=0&...`  
-то в Bothost:
+Правильный URL (актуальный для TVIL):
 
 ```
-TVIL_API_BASE=https://tvil.ru/api/v1
+https://tvil.ru/api/reserves/badges?isClient=0&counter=...
+```
+
+В Bothost:
+
+```
+TVIL_API_BASE=https://tvil.ru/api/reserves
 ```
 
 (Если у вас другой путь — укажите свой, как в DevTools.)

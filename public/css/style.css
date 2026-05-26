@@ -251,6 +251,46 @@ a {
   background: radial-gradient(ellipse 80% 50% at 50% 100%, transparent 0%, rgba(0, 0, 0, 0.25) 100%);
 }
 
+/* Тонкая анимация "тумана" поверх фото в шапке */
+.hero__bg::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse 40% 35% at 15% 35%, rgba(244, 239, 230, 0.18), transparent 55%),
+    radial-gradient(ellipse 35% 30% at 75% 30%, rgba(90, 167, 98, 0.14), transparent 60%),
+    linear-gradient(135deg, rgba(44, 74, 94, 0.18), rgba(26, 51, 68, 0.06));
+  filter: blur(28px);
+  opacity: 0.75;
+  animation: heroFog 12s var(--ease) infinite alternate;
+}
+
+.hero__bg::after {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(ellipse 20% 12% at 40% 65%, rgba(244, 239, 230, 0.22), transparent 65%),
+    radial-gradient(ellipse 18% 10% at 70% 55%, rgba(196, 165, 116, 0.18), transparent 65%);
+  filter: blur(38px);
+  opacity: 0.55;
+  animation: heroFog2 16s var(--ease) infinite alternate;
+}
+
+@keyframes heroFog {
+  0% { transform: translate3d(-1%, -2%, 0) scale(1.02); }
+  100% { transform: translate3d(2%, 1%, 0) scale(1.06); }
+}
+
+@keyframes heroFog2 {
+  0% { transform: translate3d(1%, 2%, 0) scale(1.03); opacity: 0.45; }
+  100% { transform: translate3d(-2%, -1%, 0) scale(1.08); opacity: 0.65; }
+}
+
+.hero__bg img {
+  transform: scale(1.01);
+}
+
 .hero__content {
   position: relative;
   z-index: 1;
@@ -482,6 +522,11 @@ a {
   opacity: 0.72;
 }
 
+.room-card--unavailable:hover {
+  transform: none;
+  box-shadow: 0 4px 20px rgba(28, 36, 32, 0.06);
+}
+
 .room-card--unavailable .room-card__img {
   filter: grayscale(0.35);
 }
@@ -490,6 +535,15 @@ a {
   left: auto;
   right: 1rem;
   background: var(--danger, #b91c1c);
+}
+
+@keyframes busyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.room-card__badge--busy {
+  animation: busyPulse 1.1s var(--ease) infinite;
 }
 
 .room-card__busy {
@@ -1427,10 +1481,44 @@ a {
   border-radius: 8px;
   margin-top: 1rem;
 }
+
+.form-msg.success, .form-success {
+  animation: popIn 0.28s var(--ease) both;
+}
+
 .form-msg.error {
   display: block;
   background: #fee2e2;
   color: #991b1b;
+}
+
+.form-msg.error {
+  animation: shake 0.35s var(--ease) both;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__bg::before,
+  .hero__bg::after,
+  .room-card__badge--busy {
+    animation: none !important;
+  }
+  .form-msg.success,
+  .form-msg.error {
+    animation: none !important;
+  }
 }
 .booking__form-full label span {
   display: block;

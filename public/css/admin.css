@@ -45,6 +45,14 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: va
 .table th, .table td { padding: .65rem .75rem; text-align: left; border-bottom: 1px solid var(--border); }
 .table tr:last-child td { border-bottom: none; }
 
+.table tbody tr {
+  transition: background .2s var(--ease, ease), transform .2s var(--ease, ease);
+}
+
+.table tbody tr:hover {
+  background: rgba(61, 92, 74, 0.08);
+}
+
 .btn { padding: .5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: .85rem; background: #ddd; }
 .btn--primary { background: var(--accent); color: #fff; }
 .btn--danger { background: var(--danger); color: #fff; }
@@ -77,10 +85,29 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: va
 
 .hint { color: #666; font-size: .9rem; }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
-.modal__box { background: var(--card); padding: 1.5rem; border-radius: 12px; max-width: 520px; width: 100%; max-height: 90vh; overflow: auto; }
+.modal__box {
+  background: var(--card);
+  padding: 1.5rem;
+  border-radius: 12px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  animation: modalIn .24s var(--ease, ease) both;
+}
 .modal__actions { display: flex; gap: .5rem; margin-top: 1rem; }
 .toast { position: fixed; bottom: 1rem; right: 1rem; background: var(--sidebar); color: #fff; padding: .75rem 1.25rem; border-radius: 8px; opacity: 0; transition: opacity .3s; z-index: 200; }
-.toast.show { opacity: 1; }
+.toast.show { opacity: 1; animation: toastIn .28s var(--ease, ease) both; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .telegram-panel { max-width: 640px; }
 .telegram-hint { margin-top: 1.5rem; padding: 1rem 1.25rem; background: var(--card); border-radius: 10px; border: 1px solid var(--border); font-size: .92rem; }

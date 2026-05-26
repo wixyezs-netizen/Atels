@@ -1,12 +1,18 @@
 /**
- * Опрос внутреннего API личного кабинета TVIL (как в DevTools → Network).
- * Нужны cookie сессии из браузера — см. TVIL-DEVTOOLS.md
+ * Опрос внутреннего API личного кабинета TVIL (DevTools → badges).
  */
 const https = require('https');
 const http = require('http');
 
+/** Счётчики как в личном кабинете TVIL (запрос reserves/badges). */
 const WATCH_COUNTERS = [
   'arrival-today',
+  'arrival-tomorrow',
+  'arrived-no-departure',
+  'confirmed-not-ready',
+  'fixed',
+  'guest-response-not-ready',
+  'not-confirmed',
   'not-success',
   'success',
   'live-unread-messages',
@@ -17,10 +23,6 @@ let polling = false;
 
 function isConfigured() {
   return Boolean(process.env.TVIL_COOKIE || process.env.TVIL_SESSION_COOKIE);
-}
-
-function getApiBase() {
-  return (process.env.TVIL_API_BASE || 'https://tvil.ru/api/v1').replace(/\/$/, '');
 }
 
 function getCookie() {
@@ -35,6 +37,19 @@ function getCountersList() {
     .filter(Boolean);
 }
 
+function getApiCandidates(db) {
+  const saved = db?.getSetting?.('tvil_api_base_ok', '');
+  const fromEnv = process.env.TVIL_API_BASE;
+  const list = [
+    saved,
+    fromEnv,
+    'https://tvil.ru/api/reserves',
+    'https://tvil.ru/api/v1',
+    'https://tvil.ru/api',
+  ].filter(Boolean);
+  return [...new Set(list.map((b) => b.replace(/\/$/, '')))];
+}
+
 function requestJson(urlStr) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlStr);
@@ -45,8 +60,10 @@ function requestJson(urlStr) {
       path: url.pathname + url.search,
       method: 'GET',
       headers: {
-        Accept: 'application/json, application/vnd.api+json',
+        Accept: 'application/json, application/vnd.api+json, text/json, */*',
+        'Accept-Language': 'ru-RU,ru;q=0.9',
         Cookie: getCookie(),
+        Origin: 'https://tvil.ru',
         Referer: process.env.TVIL_REFERER || 'https://tvil.ru/owner/',
         'User-Agent':
           process.env.TVIL_USER_AGENT ||
@@ -61,16 +78,34 @@ function requestJson(urlStr) {
         body += c;
       });
       res.on('end', () => {
+        const ct = res.headers['content-type'] || '';
         if (res.statusCode === 401 || res.statusCode === 403) {
-          return reject(new Error('TVIL: сессия истекла — обновите TVIL_COOKIE в Bothost'));
+          return reject(new Error('TVIL: сессия истекла — обновите TVIL_COOKIE'));
         }
         if (res.statusCode >= 400) {
-          return reject(new Error(`TVIL API HTTP ${res.statusCode}: ${body.slice(0, 200)}`));
+          return reject(
+            new Error(`TVIL HTTP ${res.statusCode}: ${body.trim().slice(0, 150).replace(/\s+/g, ' ')}`)
+          );
+        }
+        const trimmed = body.trim();
+        if (!trimmed) {
+          return reject(new Error('TVIL API: пустой ответ'));
+        }
+        if (trimmed.startsWith('<') || /text\/html/i.test(ct)) {
+          return reject(
+            new Error(
+              `TVIL вернул HTML вместо JSON. Скопируйте Request URL запроса badges в DevTools → TVIL_API_BASE. Фрагмент: ${trimmed.slice(0, 80)}`
+            )
+          );
         }
         try {
-          resolve(JSON.parse(body));
+          resolve(JSON.parse(trimmed));
         } catch {
-          reject(new Error('TVIL API: не JSON — проверьте TVIL_API_BASE'));
+          reject(
+            new Error(
+              `TVIL API: не JSON (${ct}). Проверьте TVIL_API_BASE и cookie. Начало: ${trimmed.slice(0, 100)}`
+            )
+          );
         }
       });
     });
@@ -80,7 +115,6 @@ function requestJson(urlStr) {
   });
 }
 
-/** Разные форматы ответа badges */
 function extractCounts(payload) {
   const out = {};
   if (!payload) return out;
@@ -120,12 +154,44 @@ function setStoredCount(db, key, val) {
   db.setSetting(`tvil_badge_${key}`, String(val));
 }
 
-async function fetchBadges() {
+async function fetchBadges(db) {
   const counters = getCountersList().join(',');
   const q = `badges?isClient=0&counter=${encodeURIComponent(counters)}`;
-  const url = `${getApiBase()}/${q}`;
-  const json = await requestJson(url);
-  return extractCounts(json);
+  let lastErr;
+
+  for (const base of getApiCandidates(db)) {
+    const url = `${base}/${q}`;
+    try {
+      const json = await requestJson(url);
+      if (db) db.setSetting('tvil_api_base_ok', base);
+      const counts = extractCounts(json);
+      if (Object.keys(counts).length) return counts;
+      lastErr = new Error('TVIL API: JSON без счётчиков — проверьте TVIL_BADGE_COUNTERS');
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  throw lastErr || new Error('TVIL API: не удалось получить badges');
+}
+
+async function diagnose(db) {
+  const counters = getCountersList().join(',');
+  const q = `badges?isClient=0&counter=${encodeURIComponent(counters)}`;
+  const results = [];
+
+  for (const base of getApiCandidates(db)) {
+    const url = `${base}/${q}`;
+    try {
+      const json = await requestJson(url);
+      const counts = extractCounts(json);
+      results.push({ base, ok: true, counts, url });
+    } catch (e) {
+      results.push({ base, ok: false, error: e.message, url });
+    }
+  }
+
+  return results;
 }
 
 async function pollOnce(deps) {
@@ -137,10 +203,10 @@ async function pollOnce(deps) {
   const result = { ok: true, counts: {}, notified: [], skipped: false, errors: [] };
 
   try {
-    const counts = await fetchBadges();
+    const counts = await fetchBadges(db);
     result.counts = counts;
     const notifyOnFirst = process.env.TVIL_API_NOTIFY_ON_START === 'true';
-    let isFirstSync = db.getSetting('tvil_api_synced', '') !== 'true';
+    const isFirstSync = db.getSetting('tvil_api_synced', '') !== 'true';
 
     for (const [key, val] of Object.entries(counts)) {
       const num = Number(val);
@@ -185,6 +251,9 @@ async function pollOnce(deps) {
     db.setSetting('tvil_api_synced', 'true');
     db.setSetting('tvil_api_last_poll', new Date().toISOString());
     db.setSetting('tvil_api_last_error', '');
+    if (db.getSetting('tvil_api_base_ok')) {
+      result.apiBase = db.getSetting('tvil_api_base_ok');
+    }
   } catch (err) {
     result.ok = false;
     result.errors.push(err.message);
@@ -200,8 +269,14 @@ async function pollOnce(deps) {
 
 function labelForCounter(key) {
   const labels = {
-    'arrival-today': 'Заезды сегодня',
-    'not-success': 'Нужна реакция',
+    'arrival-today': 'Заезд сегодня',
+    'arrival-tomorrow': 'Заезд завтра',
+    'arrived-no-departure': 'Заехали, не выехали',
+    'confirmed-not-ready': 'Подтверждено, не готово',
+    fixed: 'Закреплено',
+    'guest-response-not-ready': 'Ответ гостя',
+    'not-confirmed': 'Не подтверждено',
+    'not-success': 'Требует внимания',
     success: 'Успешные',
     'live-unread-messages': 'Непрочитанные сообщения',
   };
@@ -210,6 +285,9 @@ function labelForCounter(key) {
 
 function startPoller(deps) {
   if (!isConfigured()) return null;
+  if (global.__tvilApiPollerStarted) return pollTimer;
+  global.__tvilApiPollerStarted = true;
+
   const interval = parseInt(process.env.TVIL_API_POLL_MS || '90000', 10);
   if (pollTimer) clearInterval(pollTimer);
 
@@ -235,7 +313,9 @@ function getStatus(db) {
 
   return {
     configured: isConfigured(),
-    apiBase: getApiBase(),
+    apiBase:
+      db?.getSetting?.('tvil_api_base_ok') || process.env.TVIL_API_BASE || 'https://tvil.ru/api/reserves',
+    apiCandidates: getApiCandidates(db),
     counters,
     stored,
     pollIntervalSec: parseInt(process.env.TVIL_API_POLL_MS || '90000', 10) / 1000,
@@ -248,6 +328,7 @@ function getStatus(db) {
 module.exports = {
   isConfigured,
   fetchBadges,
+  diagnose,
   pollOnce,
   startPoller,
   getStatus,

@@ -1,5 +1,5 @@
 /**
  * Точка входа Bothost (ожидает /app/http-wrapper.js).
- * Запускает основной сервер DVIN.
  */
-require('./server.js');
+const { startServer } = require('./server.js');
+startServer();

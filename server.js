@@ -11,7 +11,7 @@ const tvilMail = require('./tvil-mail');
 const tvilApi = require('./tvil-api');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const SITE_BUILD = 'dvin-v8-tvil-api';
+const SITE_BUILD = 'dvin-v9-tvil-reserves';
 /** Пока нет файла public/images/hero.jpg — показываем это фото (можно заменить в админке). */
 const DEFAULT_HERO_IMAGE = 'https://hmd.tvil.ru/tmp/20230629/u2/6212782.jpeg';
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -448,6 +448,14 @@ app.post('/api/admin/tvil-api/poll', requireAdmin, async (_req, res) => {
   res.json(result);
 });
 
+app.get('/api/admin/tvil-api/diagnose', requireAdmin, async (_req, res) => {
+  if (!tvilApi.isConfigured()) {
+    return res.status(400).json({ error: 'Задайте TVIL_COOKIE' });
+  }
+  const results = await tvilApi.diagnose(db);
+  res.json({ results });
+});
+
 app.delete('/api/admin/bookings/:id', requireAdmin, (req, res) => {
   db.cancelBooking(req.params.id);
   res.json({ success: true });
@@ -580,9 +588,10 @@ app.use((req, res) => {
 
 const HOST = process.env.HOST || '0.0.0.0';
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`DVIN ${SITE_BUILD} → http://${HOST}:${PORT}`);
-  console.log('  Сайт: /  Админ: /admin  Health: /health');
+function bootServices() {
+  if (global.__dvinServicesBooted) return;
+  global.__dvinServicesBooted = true;
+
   if (telegram.isConfigured()) {
     console.log('  Telegram: включён');
     const url = getSiteUrl();
@@ -603,19 +612,46 @@ const server = app.listen(PORT, HOST, () => {
   if (tvilMail.isConfigured()) {
     tvilMail.startPoller({ db, telegram });
   } else {
-    console.log('  TVIL почта: выключена (задайте TVIL_IMAP_* — см. TVIL-MAIL.md)');
+    console.log('  TVIL почта: выключена (не нужна, если есть TVIL_COOKIE)');
   }
   if (tvilApi.isConfigured()) {
     tvilApi.startPoller({ db, telegram });
   } else {
-    console.log('  TVIL API: выключен (TVIL_COOKIE из DevTools — см. TVIL-DEVTOOLS.md)');
+    console.log('  TVIL API: выключен (задайте TVIL_COOKIE — см. TVIL-DEVTOOLS.md)');
   }
-});
+}
 
-server.on('error', (err) => {
-  console.error('Ошибка запуска сервера:', err);
-  process.exit(1);
-});
+function startServer() {
+  if (global.__dvinHttpServer) {
+    return global.__dvinHttpServer;
+  }
+
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`DVIN ${SITE_BUILD} → http://${HOST}:${PORT}`);
+    console.log('  Сайт: /  Админ: /admin  Health: /health');
+    bootServices();
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(
+        `Порт ${PORT} занят. В Bothost укажите один вход: http-wrapper.js (не server.js дважды).`
+      );
+    } else {
+      console.error('Ошибка запуска сервера:', err);
+    }
+    process.exit(1);
+  });
+
+  global.__dvinHttpServer = server;
+  return server;
+}
+
+module.exports = { app, startServer };
+
+if (require.main === module) {
+  startServer();
+}
 
 process.on('uncaughtException', (err) => {
   console.error('uncaughtException:', err);
