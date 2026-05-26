@@ -7,9 +7,11 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const telegram = require('./telegram');
 const db = require('./db');
+const tvilMail = require('./tvil-mail');
+const tvilApi = require('./tvil-api');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const SITE_BUILD = 'dvin-v6-sqlite';
+const SITE_BUILD = 'dvin-v8-tvil-api';
 /** Пока нет файла public/images/hero.jpg — показываем это фото (можно заменить в админке). */
 const DEFAULT_HERO_IMAGE = 'https://hmd.tvil.ru/tmp/20230629/u2/6212782.jpeg';
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -83,6 +85,8 @@ app.get('/health', (_req, res) => {
     indexHtml: fs.existsSync(INDEX_HTML),
     adminHtml: fs.existsSync(ADMIN_HTML),
     telegram: telegram.getStatus(),
+    tvilMail: tvilMail.getStatus(db),
+    tvilApi: tvilApi.getStatus(db),
     database: fs.existsSync(db.dbPath),
     uptime: Math.floor(process.uptime()),
   });
@@ -416,6 +420,34 @@ app.post('/api/admin/telegram/test', requireAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/admin/tvil-mail', requireAdmin, (_req, res) => {
+  res.json(tvilMail.getStatus(db));
+});
+
+app.post('/api/admin/tvil-mail/poll', requireAdmin, async (_req, res) => {
+  if (!tvilMail.isConfigured()) {
+    return res.status(400).json({
+      error: 'Задайте TVIL_IMAP_HOST, TVIL_IMAP_USER, TVIL_IMAP_PASSWORD в Bothost',
+    });
+  }
+  const result = await tvilMail.pollOnce({ db, telegram });
+  res.json(result);
+});
+
+app.get('/api/admin/tvil-api', requireAdmin, (_req, res) => {
+  res.json(tvilApi.getStatus(db));
+});
+
+app.post('/api/admin/tvil-api/poll', requireAdmin, async (_req, res) => {
+  if (!tvilApi.isConfigured()) {
+    return res.status(400).json({
+      error: 'Задайте TVIL_COOKIE из DevTools (см. TVIL-DEVTOOLS.md)',
+    });
+  }
+  const result = await tvilApi.pollOnce({ db, telegram });
+  res.json(result);
+});
+
 app.delete('/api/admin/bookings/:id', requireAdmin, (req, res) => {
   db.cancelBooking(req.params.id);
   res.json({ success: true });
@@ -501,6 +533,30 @@ app.get('/TELEGRAM.md', (_req, res) => {
   res.type('text/plain; charset=utf-8');
   res.sendFile(doc);
 });
+app.get('/TVIL-MAIL.md', (_req, res) => {
+  const doc = path.join(__dirname, 'TVIL-MAIL.md');
+  if (!fs.existsSync(doc)) return res.status(404).send('Not found');
+  res.type('text/plain; charset=utf-8');
+  res.sendFile(doc);
+});
+app.get('/TVIL-DEVTOOLS.md', (_req, res) => {
+  const doc = path.join(__dirname, 'TVIL-DEVTOOLS.md');
+  if (!fs.existsSync(doc)) return res.status(404).send('Not found');
+  res.type('text/plain; charset=utf-8');
+  res.sendFile(doc);
+});
+app.get('/TVIL-N8N.md', (_req, res) => {
+  const doc = path.join(__dirname, 'TVIL-N8N.md');
+  if (!fs.existsSync(doc)) return res.status(404).send('Not found');
+  res.type('text/plain; charset=utf-8');
+  res.sendFile(doc);
+});
+app.get('/TVIL-NODUL.md', (_req, res) => {
+  const doc = path.join(__dirname, 'TVIL-NODUL.md');
+  if (!fs.existsSync(doc)) return res.status(404).send('Not found');
+  res.type('text/plain; charset=utf-8');
+  res.sendFile(doc);
+});
 
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(
@@ -543,6 +599,16 @@ const server = app.listen(PORT, HOST, () => {
     } else {
       console.log('  Telegram: задайте SITE_URL=https://... для /start у бота');
     }
+  }
+  if (tvilMail.isConfigured()) {
+    tvilMail.startPoller({ db, telegram });
+  } else {
+    console.log('  TVIL почта: выключена (задайте TVIL_IMAP_* — см. TVIL-MAIL.md)');
+  }
+  if (tvilApi.isConfigured()) {
+    tvilApi.startPoller({ db, telegram });
+  } else {
+    console.log('  TVIL API: выключен (TVIL_COOKIE из DevTools — см. TVIL-DEVTOOLS.md)');
   }
 });
 

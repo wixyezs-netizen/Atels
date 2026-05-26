@@ -359,9 +359,15 @@
   async function loadTelegramPanel() {
     const el = $('#telegram-status-text');
     const urlEl = $('#telegram-webhook-url');
+    const tvilEl = $('#tvil-mail-status');
+    const tvilApiEl = $('#tvil-api-status');
     if (!el) return;
     try {
-      const s = await api('/api/admin/telegram');
+      const [s, tvil, tvilApiSt] = await Promise.all([
+        api('/api/admin/telegram'),
+        api('/api/admin/tvil-mail').catch(() => null),
+        api('/api/admin/tvil-api').catch(() => null),
+      ]);
       if (s.configured) {
         const chats =
           s.chatCount > 0
@@ -373,10 +379,60 @@
           '⚠️ Задайте <code>TELEGRAM_BOT_TOKEN</code> в переменных Bothost и передеплойте.';
       }
       if (urlEl) urlEl.textContent = s.webhookUrl;
+
+      if (tvilEl && tvil) {
+        if (tvil.configured) {
+          const err = tvil.lastError
+            ? `<br><span class="error">Ошибка: ${esc(tvil.lastError)}</span>`
+            : '';
+          tvilEl.innerHTML = `✅ Почта TVIL: <b>${esc(tvil.user)}</b> @ ${esc(tvil.host)}<br>
+            Опрос каждые ${tvil.pollIntervalSec} с · обработано писем: <b>${tvil.processedTotal}</b><br>
+            Последняя проверка: ${tvil.lastPoll ? new Date(tvil.lastPoll).toLocaleString('ru-RU') : '—'}${err}`;
+        } else {
+          tvilEl.innerHTML =
+            '⚠️ Задайте <code>TVIL_IMAP_HOST</code>, <code>TVIL_IMAP_USER</code>, <code>TVIL_IMAP_PASSWORD</code> в Bothost.';
+        }
+      }
+
+      if (tvilApiEl && tvilApiSt) {
+        if (tvilApiSt.configured) {
+          const counts = Object.entries(tvilApiSt.stored || {})
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(', ');
+          const err = tvilApiSt.lastError
+            ? `<br><span class="error">${esc(tvilApiSt.lastError)}</span>`
+            : '';
+          tvilApiEl.innerHTML = `✅ TVIL API (badges): ${esc(tvilApiSt.apiBase)}<br>Счётчики: ${counts || 'ещё не опрошены'}${err}`;
+        } else {
+          tvilApiEl.innerHTML =
+            '⚠️ DevTools: скопируйте <code>TVIL_COOKIE</code> из запроса <code>badges</code> → <a href="/TVIL-DEVTOOLS.md" target="_blank">инструкция</a>';
+        }
+      }
     } catch (err) {
       el.textContent = err.message;
     }
   }
+
+  $('#tvil-mail-poll-btn')?.addEventListener('click', async () => {
+    try {
+      const r = await api('/api/admin/tvil-mail/poll', { method: 'POST' });
+      toast(`Почта: уведомлений ${r.notified || 0}`);
+      loadTelegramPanel();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+
+  $('#tvil-api-poll-btn')?.addEventListener('click', async () => {
+    try {
+      const r = await api('/api/admin/tvil-api/poll', { method: 'POST' });
+      const n = (r.notified || []).length;
+      toast(r.message || `TVIL API: уведомлений ${n}`);
+      loadTelegramPanel();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
 
   $('#telegram-test-btn')?.addEventListener('click', async () => {
     try {

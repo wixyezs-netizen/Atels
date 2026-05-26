@@ -27,7 +27,7 @@ WEBHOOK_SECRET=...для TVIL через Make...
 TELEGRAM_WEBHOOK_SECRET=...для /start у бота...
 ```
 
-Инструкция по боту и TVIL: `TELEGRAM.md` в репозитории или `/TELEGRAM.md` на сайте.
+Инструкции: `/TELEGRAM.md` (бот), `/TVIL-MAIL.md` (авто-чтение почты TVIL).
 
 ## Обновить сайт (обязательно после правок)
 

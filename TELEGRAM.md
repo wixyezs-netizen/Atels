@@ -41,11 +41,18 @@ SITE_URL=https://atelmore.bothost.tech
 
 ---
 
-## TVIL.ru — можно ли напрямую?
+## TVIL.ru — уведомления
 
-У [вашего объявления на TVIL](https://tvil.ru/city/golubickaya/hotels/1170033/) **нет открытого API** для владельцев: заявки приходят в личный кабинет и на **email** с сайта. Прямой «подписки» на брони TVIL в бот без посредника TVIL не даёт.
+У [объявления на TVIL](https://tvil.ru/city/golubickaya/hotels/1170033/) нет API. Заявки приходят на **email**.
 
-### Вариант 1 — письма TVIL → сайт → Telegram (рекомендуется)
+### Вариант 1 — автоматически (рекомендуется)
+
+Сайт сам читает почту TVIL по IMAP и шлёт в Telegram.  
+**Инструкция:** [TVIL-MAIL.md](TVIL-MAIL.md) или `/TVIL-MAIL.md` на сайте.
+
+Переменные: `TVIL_IMAP_HOST`, `TVIL_IMAP_USER`, `TVIL_IMAP_PASSWORD`.
+
+### Вариант 2 — Make/Zapier (если IMAP нельзя)
 
 1. Убедитесь, что на TVIL указана почта, куда приходят заявки.
 2. Зарегистрируйтесь на [Make.com](https://www.make.com) или [Zapier](https://zapier.com).
@@ -70,11 +77,11 @@ Body:
 
 4. В Bothost задайте `WEBHOOK_SECRET` тот же, что в заголовке.
 
-### Вариант 2 — менеджер каналов (Bnovo, BookingLite…)
+### Вариант 3 — менеджер каналов (Bnovo, BookingLite…)
 
 Если подключите TVIL к Bnovo/BookingLite, уведомления идут в их систему. Оттуда часто можно настроить webhook на тот же URL `/api/webhooks/notify` — см. документацию вашей PMS.
 
-### Вариант 3 — вручную
+### Вариант 4 — вручную
 
 Перешлите текст заявки с TVIL в чат с ботом (если нужно только архивировать) — основной поток лучше через вариант 1.
 

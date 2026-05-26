@@ -112,11 +112,18 @@
               <li>В Bothost добавьте <code>TELEGRAM_BOT_TOKEN</code> и <code>TELEGRAM_CHAT_ID</code></li>
               <li>Передеплойте и напишите боту <code>/start</code></li>
             </ol>
-            <h2>TVIL.ru</h2>
-            <p>Прямого API у TVIL нет. Подключите письма с заявками через Make/Zapier на вебхук:</p>
-            <p><code id="telegram-webhook-url">—</code></p>
-            <p>Заголовок: <code>X-Webhook-Secret</code> = ваш <code>WEBHOOK_SECRET</code></p>
-            <p><a href="/TELEGRAM.md" target="_blank" rel="noopener">Подробная инструкция →</a></p>
+            <h2>TVIL.ru — автоматически</h2>
+            <p id="tvil-mail-status">Загрузка…</p>
+            <button type="button" class="btn" id="tvil-mail-poll-btn">Проверить почту</button>
+            <button type="button" class="btn" id="tvil-api-poll-btn">Проверить TVIL API</button>
+            <p id="tvil-api-status" class="tvil-mail-hint">TVIL API (DevTools)…</p>
+            <p class="tvil-mail-hint">IMAP · <a href="/TVIL-DEVTOOLS.md" target="_blank">DevTools</a> · <a href="/TVIL-N8N.md" target="_blank">n8n</a> · <a href="/TVIL-NODUL.md" target="_blank">Nodul</a></p>
+            <details>
+              <summary>Запасной вариант: вебхук (Make/Zapier)</summary>
+              <p><code id="telegram-webhook-url">—</code></p>
+              <p>Заголовок: <code>X-Webhook-Secret</code> = <code>WEBHOOK_SECRET</code></p>
+            </details>
+            <p><a href="/TELEGRAM.md" target="_blank" rel="noopener">Telegram-бот →</a></p>
           </div>
         </div>
       </section>

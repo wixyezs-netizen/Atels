@@ -136,7 +136,45 @@ function createSchema() {
       chat_id TEXT PRIMARY KEY,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS tvil_emails (
+      id TEXT PRIMARY KEY,
+      subject TEXT,
+      from_addr TEXT,
+      body_preview TEXT,
+      hints TEXT DEFAULT '{}',
+      received_at TEXT NOT NULL
+    );
   `);
+}
+
+function isTvilEmailProcessed(id) {
+  return !!db.prepare('SELECT 1 FROM tvil_emails WHERE id = ?').get(id);
+}
+
+function markTvilEmailProcessed(row) {
+  db.prepare(
+    `INSERT OR IGNORE INTO tvil_emails (id, subject, from_addr, body_preview, hints, received_at)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(
+    row.id,
+    row.subject || '',
+    row.from_addr || '',
+    row.body_preview || '',
+    row.hints || '{}',
+    new Date().toISOString()
+  );
+}
+
+function countTvilEmails() {
+  return db.prepare('SELECT COUNT(*) AS c FROM tvil_emails').get().c;
+}
+
+function getTvilEmailsRecent(limit = 10) {
+  return db
+    .prepare(
+      'SELECT id, subject, from_addr, body_preview, received_at FROM tvil_emails ORDER BY received_at DESC LIMIT ?'
+    )
+    .all(limit);
 }
 
 function getSetting(key, fallback = '') {
@@ -572,4 +610,8 @@ module.exports = {
   saveGallery,
   getTelegramChatIds,
   addTelegramChat,
+  isTvilEmailProcessed,
+  markTvilEmailProcessed,
+  countTvilEmails,
+  getTvilEmailsRecent,
 };
