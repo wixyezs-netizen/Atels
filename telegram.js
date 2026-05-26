@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 let chatsFile = '';
+let extraChatIds = null;
+let onRegisterChat = null;
 
 const STATUS_BOOKING = {
   pending: '⏳ Новая',
@@ -18,6 +20,23 @@ function init(options = {}) {
   if (options.dataDir) {
     chatsFile = path.join(options.dataDir, 'telegram-chats.json');
   }
+  if (typeof options.getChatIds === 'function') {
+    extraChatIds = options.getChatIds;
+  }
+  if (typeof options.onRegisterChat === 'function') {
+    onRegisterChat = options.onRegisterChat;
+  }
+}
+
+/** Секрет для Telegram setWebhook: только A-Za-z0-9_- */
+function normalizeWebhookSecret(raw) {
+  if (!raw) return '';
+  const clean = String(raw).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 256);
+  return clean.length >= 8 ? clean : '';
+}
+
+function getWebhookSecret() {
+  return normalizeWebhookSecret(process.env.TELEGRAM_WEBHOOK_SECRET);
 }
 
 function getToken() {
@@ -51,8 +70,9 @@ function getChatIdsFromEnv() {
 }
 
 function getAllChatIds() {
+  const fromDb = extraChatIds ? extraChatIds().map(String) : [];
   const fileIds = (readChatsFile().chatIds || []).map(String);
-  return [...new Set([...getChatIdsFromEnv(), ...fileIds])];
+  return [...new Set([...getChatIdsFromEnv(), ...fromDb, ...fileIds])];
 }
 
 function escHtml(s) {
@@ -215,6 +235,7 @@ async function handleBotUpdate(update, siteUrl) {
 
   if (text.startsWith('/start')) {
     registerChatId(chatId);
+    if (onRegisterChat) onRegisterChat(chatId);
     await sendMessage(
       [
         '✅ <b>Уведомления DVIN подключены</b>',
@@ -241,7 +262,7 @@ async function setupWebhook(siteUrl) {
   if (!token || !siteUrl) return { ok: false, reason: 'no_token_or_url' };
 
   const hookUrl = `${siteUrl.replace(/\/$/, '')}/api/telegram/webhook`;
-  const secret = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+  const secret = getWebhookSecret();
   const payload = { url: hookUrl, allowed_updates: ['message'] };
   if (secret) payload.secret_token = secret;
 
@@ -304,7 +325,7 @@ function getStatus() {
     configured: isConfigured(),
     chatCount: chatIds.length,
     chatIdsPreview: chatIds.map((id) => `${id.slice(0, 3)}…${id.slice(-3)}`),
-    webhookSecretSet: Boolean(process.env.TELEGRAM_WEBHOOK_SECRET),
+    webhookSecretSet: Boolean(getWebhookSecret()),
     webhookNotifySecretSet: Boolean(process.env.WEBHOOK_SECRET),
   };
 }
@@ -313,6 +334,7 @@ module.exports = {
   init,
   isConfigured,
   getAllChatIds,
+  getWebhookSecret,
   getStatus,
   sendMessage,
   registerChatId,

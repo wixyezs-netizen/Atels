@@ -22,6 +22,23 @@
     return n ? `${Number(n).toLocaleString('ru-RU')} ₽` : '';
   }
 
+  function getBookingDates() {
+    const form = document.getElementById('booking-form');
+    if (!form) return { checkIn: '', checkOut: '' };
+    return {
+      checkIn: form.querySelector('[name="checkin"]')?.value || '',
+      checkOut: form.querySelector('[name="checkout"]')?.value || '',
+    };
+  }
+
+  function roomsApiUrl() {
+    const { checkIn, checkOut } = getBookingDates();
+    if (checkIn && checkOut) {
+      return `/api/rooms?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`;
+    }
+    return '/api/rooms';
+  }
+
   async function loadSettings() {
     try {
       const s = await api('/api/settings');
@@ -36,7 +53,9 @@
         email.href = `mailto:${s.email}`;
       }
       const addr = document.getElementById('contact-address');
-      if (addr) addr.innerHTML = `<strong>Адрес:</strong> ${esc(s.region || '')}, ${esc(s.address || '')}<br><strong>Море:</strong> ${esc(s.seaDistance || '')}`;
+      if (addr) {
+        addr.innerHTML = `<strong>Адрес:</strong> ${esc(s.region || '')}, ${esc(s.address || '')}<br><strong>Море:</strong> ${esc(s.seaDistance || '')}`;
+      }
       const heroImg = document.getElementById('hero-img');
       if (heroImg && s.heroImage) {
         heroImg.src = s.heroImage + (s.heroImage.includes('?') ? '&' : '?') + 'v=1';
@@ -51,12 +70,21 @@
   async function loadRooms() {
     const grid = document.getElementById('rooms-grid');
     if (!grid) return;
+    const { checkIn, checkOut } = getBookingDates();
+    const hasDates = checkIn && checkOut;
     try {
-      const rooms = await api('/api/rooms');
+      const rooms = await api(roomsApiUrl());
+      if (!rooms.length) {
+        grid.innerHTML = '<p>Номера скоро появятся</p>';
+        return;
+      }
+
       grid.innerHTML = rooms
-        .map(
-          (r, i) => `<article class="room-card${r.badge ? ' room-card--featured' : ''}">
+        .map((r, i) => {
+          const unavailable = hasDates && r.available === false;
+          return `<article class="room-card${r.badge ? ' room-card--featured' : ''}${unavailable ? ' room-card--unavailable' : ''}">
           ${r.badge ? `<span class="room-card__badge">${esc(r.badge)}</span>` : ''}
+          ${unavailable ? '<span class="room-card__badge room-card__badge--busy">Занято на эти даты</span>' : ''}
           <div class="room-card__img" data-room-img="${i}" style="${r.image ? `background-image:url('${r.image}')` : ''}"></div>
           <div class="room-card__body">
             <div class="room-card__top">
@@ -68,16 +96,28 @@
               <li>${r.guestsMin}–${r.guestsMax} гостя</li>
               ${r.area ? `<li>${r.area} м²</li>` : ''}
             </ul>
-            <a href="#booking" class="room-card__link" data-room-id="${r.id}">Забронировать →</a>
+            ${
+              unavailable
+                ? '<p class="room-card__busy">Выберите другие даты или номер</p>'
+                : `<a href="#booking" class="room-card__link" data-room-id="${r.id}">Забронировать →</a>`
+            }
           </div>
-        </article>`
-        )
+        </article>`;
+        })
         .join('');
 
       const select = document.getElementById('booking-room');
       if (select) {
-        select.innerHTML = '<option value="">Выберите номер</option>' +
-          rooms.map((r) => `<option value="${r.id}">${esc(r.title)} — ${esc(r.priceLabel)}</option>`).join('');
+        const prev = select.value;
+        select.innerHTML =
+          '<option value="">Выберите номер</option>' +
+          rooms
+            .map((r) => {
+              const unavailable = hasDates && r.available === false;
+              return `<option value="${r.id}" ${unavailable ? 'disabled' : ''}>${esc(r.title)} — ${esc(r.priceLabel)}${unavailable ? ' (занято)' : ''}</option>`;
+            })
+            .join('');
+        if (prev && [...select.options].some((o) => o.value === prev && !o.disabled)) select.value = prev;
       }
 
       grid.querySelectorAll('[data-room-id]').forEach((a) => {
@@ -120,7 +160,9 @@
         .join('');
 
       if (dots) {
-        dots.innerHTML = items.map((_, i) => `<button ${i === 0 ? 'class="active"' : ''} aria-label="${i + 1}"></button>`).join('');
+        dots.innerHTML = items
+          .map((_, i) => `<button ${i === 0 ? 'class="active"' : ''} aria-label="${i + 1}"></button>`)
+          .join('');
       }
 
       const reviews = slider.querySelectorAll('.review');
@@ -149,11 +191,15 @@
     const today = new Date().toISOString().slice(0, 10);
     if (checkin) checkin.min = today;
     if (checkout) checkout.min = today;
-    checkin?.addEventListener('change', () => {
+
+    const onDatesChange = () => {
       if (checkout && checkin.value) checkout.min = checkin.value;
       updatePriceEstimate();
-    });
-    checkout?.addEventListener('change', updatePriceEstimate);
+      loadRooms();
+    };
+
+    checkin?.addEventListener('change', onDatesChange);
+    checkout?.addEventListener('change', onDatesChange);
     form.querySelector('[name="roomId"]')?.addEventListener('change', updatePriceEstimate);
 
     async function updatePriceEstimate() {
@@ -172,9 +218,16 @@
         return;
       }
       try {
-        const rooms = await api('/api/rooms');
+        const rooms = await api(roomsApiUrl());
         const room = rooms.find((r) => r.id === roomId);
-        if (room) el.textContent = `Ориентир: ${fmtPrice(room.pricePerNight * nights)} за ${nights} ноч.`;
+        if (!room) return;
+        if (room.available === false) {
+          el.textContent = 'На эти даты номер занят';
+          el.className = 'booking-estimate booking-estimate--warn';
+          return;
+        }
+        el.className = 'booking-estimate';
+        el.textContent = `Ориентир: ${fmtPrice(room.pricePerNight * nights)} за ${nights} ноч.`;
       } catch (_) {}
     }
 
@@ -200,6 +253,7 @@
         success.textContent = res.message || 'Заявка отправлена!';
         success.classList.remove('hidden');
         form.reset();
+        await loadRooms();
       } catch (err) {
         msg.textContent = err.message;
         msg.className = 'form-msg error';

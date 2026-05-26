@@ -153,37 +153,38 @@
     const status = $('#filter-review-status')?.value;
     const { items } = await api('/api/admin/reviews');
     const filtered = status ? items.filter((r) => r.status === status) : items;
-    $('#reviews-list').innerHTML = filtered
+    const tbody = $('#reviews-table tbody');
+    tbody.innerHTML = filtered
       .map(
-        (r) => `<div class="card" style="grid-template-columns:1fr auto">
-        <div>
-          <strong>${esc(r.name)}</strong> ${r.city ? `· ${esc(r.city)}` : ''} · ★ ${r.rating}
-          <span class="status status-${r.status}">${r.status}</span>
-          <p style="margin:.5rem 0 0">${esc(r.text)}</p>
-          <small>${r.roomTitle ? esc(r.roomTitle) + ' · ' : ''}${new Date(r.createdAt).toLocaleDateString('ru-RU')}</small>
-        </div>
-        <div class="card__actions">
-          ${r.status === 'pending' ? `<button class="btn btn--sm btn--primary" data-pub="${r.id}">Опубликовать</button>` : ''}
-          ${r.status !== 'rejected' ? `<button class="btn btn--sm" data-rej="${r.id}">Отклонить</button>` : ''}
-          <button class="btn btn--sm btn--danger" data-del="${r.id}">Удалить</button>
-        </div></div>`
+        (r) => `<tr>
+        <td>${esc(r.name)}${r.city ? `<br><small>${esc(r.city)}</small>` : ''}</td>
+        <td>★ ${r.rating}</td>
+        <td class="cell-text">${esc(r.text)}</td>
+        <td>${esc(r.roomTitle || '—')}</td>
+        <td><span class="status status-${r.status}">${r.status}</span></td>
+        <td>${new Date(r.createdAt).toLocaleDateString('ru-RU')}</td>
+        <td class="cell-actions">
+          ${r.status === 'pending' ? `<button class="btn btn--sm btn--primary" data-pub="${r.id}">✓</button>` : ''}
+          ${r.status !== 'rejected' ? `<button class="btn btn--sm" data-rej="${r.id}">×</button>` : ''}
+          <button class="btn btn--sm btn--danger" data-del="${r.id}">🗑</button>
+        </td></tr>`
       )
       .join('');
 
-    $('#reviews-list').querySelectorAll('[data-pub]').forEach((b) => {
+    tbody.querySelectorAll('[data-pub]').forEach((b) => {
       b.addEventListener('click', async () => {
         await api(`/api/admin/reviews/${b.dataset.pub}`, { method: 'PATCH', body: { status: 'published' } });
         toast('Опубликовано');
         await refreshAll();
       });
     });
-    $('#reviews-list').querySelectorAll('[data-rej]').forEach((b) => {
+    tbody.querySelectorAll('[data-rej]').forEach((b) => {
       b.addEventListener('click', async () => {
         await api(`/api/admin/reviews/${b.dataset.rej}`, { method: 'PATCH', body: { status: 'rejected' } });
         await refreshAll();
       });
     });
-    $('#reviews-list').querySelectorAll('[data-del]').forEach((b) => {
+    tbody.querySelectorAll('[data-del]').forEach((b) => {
       b.addEventListener('click', async () => {
         if (!confirm('Удалить?')) return;
         await api(`/api/admin/reviews/${b.dataset.del}`, { method: 'DELETE' });

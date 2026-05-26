@@ -20,7 +20,7 @@
 TELEGRAM_BOT_TOKEN=123456789:ABCdef...
 TELEGRAM_CHAT_ID=123456789
 WEBHOOK_SECRET=случайная-длинная-строка-для-tvil
-TELEGRAM_WEBHOOK_SECRET=другая-случайная-строка
+TELEGRAM_WEBHOOK_SECRET=только_буквы_цифры_дефис_подчеркивание
 SITE_URL=https://atelmore.bothost.tech
 ```
 

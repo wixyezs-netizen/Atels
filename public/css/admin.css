@@ -89,6 +89,9 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: va
 .telegram-hint code { background: var(--bg); padding: .1rem .35rem; border-radius: 4px; font-size: .85em; word-break: break-all; }
 #telegram-webhook-url { display: block; margin: .5rem 0; }
 
+.cell-text { max-width: 280px; font-size: .88rem; line-height: 1.4; }
+.cell-actions { white-space: nowrap; }
+
 @media (max-width: 768px) {
   .layout { flex-direction: column; }
   .sidebar { width: 100%; }

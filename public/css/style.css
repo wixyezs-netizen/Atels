@@ -478,6 +478,30 @@ a {
   border: 2px solid var(--wood-light);
 }
 
+.room-card--unavailable {
+  opacity: 0.72;
+}
+
+.room-card--unavailable .room-card__img {
+  filter: grayscale(0.35);
+}
+
+.room-card__badge--busy {
+  left: auto;
+  right: 1rem;
+  background: var(--danger, #b91c1c);
+}
+
+.room-card__busy {
+  color: var(--danger, #b91c1c);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
+.booking-estimate--warn {
+  color: var(--danger, #b91c1c);
+}
+
 .room-card__badge {
   position: absolute;
   top: 1rem;

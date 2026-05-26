@@ -7,7 +7,7 @@
 | Домен | `atelmore.bothost.tech` |
 | **Использовать домен** | Включено |
 | **Порт** | `3000` |
-| **Главный файл** | **`server.js`** или **`index.js`** (НЕ `js/main.js` / `public/js/main.js`) |
+| **Главный файл** | **`http-wrapper.js`** (или `server.js`) — НЕ `public/js/main.js` |
 | Команда | `npm start` |
 
 ### Ошибка `document is not defined`
@@ -52,7 +52,7 @@ git push
 
 ## Проверка
 
-- https://atelmore.bothost.tech/health → `"site":"dvin-v4"`, `"build":"dvin-v4-listen-fix"`
+- https://atelmore.bothost.tech/health → `"build":"dvin-v6-sqlite"`, `"database":true`
 - Главная: заголовок **DVIN**, одно фото в шапке (не карусель)
 
 Если на сайте всё ещё «Элегант» — на сервере **старый** `public/index.html`. Нужен push + передеплой.
