@@ -1,0 +1,29 @@
+{
+  "name": "atelier-site",
+  "version": "1.0.0",
+  "description": "Сайт ателье с админ-панелью",
+  "main": "server.js",
+  "bothost": {
+    "type": "web",
+    "entry": "server.js",
+    "port": 3000,
+    "note": "НЕ указывайте public/js/main.js — это файл для браузера"
+  },
+  "scripts": {
+    "prestart": "node copy-css.js",
+    "start": "node server.js",
+    "bothost": "node server.js",
+    "dev": "node server.js",
+    "deploy-files": "node copy-css.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.0.3"
+  }
+}
