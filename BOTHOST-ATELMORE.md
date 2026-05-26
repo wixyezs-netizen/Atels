@@ -21,7 +21,13 @@ Bothost запустил браузерный скрипт как Node. В па�
 PORT=3000
 SITE_URL=https://atelmore.bothost.tech
 NODE_ENV=production
+TELEGRAM_BOT_TOKEN=...от BotFather...
+TELEGRAM_CHAT_ID=...ваш chat_id...
+WEBHOOK_SECRET=...для TVIL через Make...
+TELEGRAM_WEBHOOK_SECRET=...для /start у бота...
 ```
+
+Инструкция по боту и TVIL: `TELEGRAM.md` в репозитории или `/TELEGRAM.md` на сайте.
 
 ## Обновить сайт (обязательно после правок)
 

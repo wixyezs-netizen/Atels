@@ -5,9 +5,10 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const telegram = require('./telegram');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const SITE_BUILD = 'dvin-v4-listen-fix';
+const SITE_BUILD = 'dvin-v5-telegram';
 /** Пока нет файла public/images/hero.jpg — показываем это фото (можно заменить в админке). */
 const DEFAULT_HERO_IMAGE = 'https://hmd.tvil.ru/tmp/20230629/u2/6212782.jpeg';
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -260,6 +261,21 @@ try {
   console.error('initData:', err.message);
 }
 
+telegram.init({ dataDir: DATA_DIR });
+
+function getSiteUrl() {
+  const fromEnv = process.env.SITE_URL || '';
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  const s = readJson(FILES.settings, defaultSettings());
+  return (s.siteUrl || '').replace(/\/$/, '');
+}
+
+function tgNotify(fn) {
+  setImmediate(() => {
+    Promise.resolve(fn()).catch((err) => console.error('[telegram]', err.message || err));
+  });
+}
+
 const app = express();
 app.set('trust proxy', 1);
 
@@ -272,8 +288,42 @@ app.get('/health', (_req, res) => {
     port: PORT,
     indexHtml: fs.existsSync(INDEX_HTML),
     adminHtml: fs.existsSync(ADMIN_HTML),
+    telegram: telegram.getStatus(),
     uptime: Math.floor(process.uptime()),
   });
+});
+
+/** Внешние уведомления (TVIL через Make/Zapier, почту и т.д.) */
+app.post('/api/webhooks/notify', (req, res) => {
+  const secret = process.env.WEBHOOK_SECRET;
+  if (!secret) return res.status(503).json({ error: 'WEBHOOK_SECRET не задан на сервере' });
+  const hdr = req.headers['x-webhook-secret'] || req.headers['authorization'] || '';
+  const token = String(hdr).startsWith('Bearer ') ? String(hdr).slice(7) : hdr;
+  if (token !== secret) return res.status(401).json({ error: 'Неверный секрет' });
+
+  const { source, title, message, text, url } = req.body || {};
+  const bodyText = message || text || title;
+  if (!bodyText) return res.status(400).json({ error: 'Укажите message или title' });
+
+  tgNotify(() =>
+    telegram.notifyExternal({
+      source: source || 'external',
+      title: title || 'Уведомление',
+      message: bodyText,
+      url,
+    })
+  );
+  res.json({ success: true });
+});
+
+/** Команда /start у бота — сохранить chat_id */
+app.post('/api/telegram/webhook', (req, res) => {
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+    return res.sendStatus(403);
+  }
+  tgNotify(() => telegram.handleBotUpdate(req.body, getSiteUrl()));
+  res.json({ ok: true });
 });
 
 app.use(express.json({ limit: '2mb' }));
@@ -388,6 +438,7 @@ app.post('/api/reviews', (req, res) => {
   };
   data.items.push(item);
   writeJson(FILES.reviews, data);
+  tgNotify(() => telegram.notifyNewReview(item));
   res.json({ success: true, message: 'Спасибо! Отзыв появится после проверки.' });
 });
 
@@ -441,6 +492,7 @@ app.post('/api/bookings', (req, res) => {
   };
   bookings.items.push(item);
   writeJson(FILES.bookings, bookings);
+  tgNotify(() => telegram.notifyNewBooking(item, getSiteUrl()));
   res.json({
     success: true,
     id: item.id,
@@ -560,11 +612,40 @@ app.patch('/api/admin/bookings/:id', requireAdmin, (req, res) => {
   const bookings = readJson(FILES.bookings, { items: [] });
   const item = bookings.items.find((b) => b.id === req.params.id);
   if (!item) return res.status(404).json({ error: 'Не найдено' });
+  const prevStatus = item.status;
   const statuses = ['pending', 'confirmed', 'cancelled', 'completed'];
   if (req.body.status && statuses.includes(req.body.status)) item.status = req.body.status;
   if (req.body.adminNote !== undefined) item.adminNote = req.body.adminNote;
   writeJson(FILES.bookings, bookings);
+  if (req.body.status && prevStatus !== item.status) {
+    tgNotify(() => telegram.notifyBookingStatus(item, getSiteUrl()));
+  }
   res.json(item);
+});
+
+app.get('/api/admin/telegram', requireAdmin, (_req, res) => {
+  res.json({
+    ...telegram.getStatus(),
+    webhookUrl: `${getSiteUrl() || '(укажите SITE_URL)'}/api/webhooks/notify`,
+    botHint: 'Напишите боту /start после настройки TELEGRAM_BOT_TOKEN',
+  });
+});
+
+app.post('/api/admin/telegram/test', requireAdmin, async (req, res) => {
+  if (!telegram.isConfigured()) {
+    return res.status(400).json({ error: 'Задайте TELEGRAM_BOT_TOKEN в переменных Bothost' });
+  }
+  const result = await telegram.sendMessage(
+    '🧪 <b>Тест DVIN</b>\nУведомления работают.',
+    {}
+  );
+  if (!result.ok) {
+    return res.status(400).json({
+      error: 'Сообщение не отправлено. Проверьте TELEGRAM_CHAT_ID или напишите боту /start',
+      detail: result,
+    });
+  }
+  res.json({ success: true });
 });
 
 app.delete('/api/admin/bookings/:id', requireAdmin, (req, res) => {
@@ -655,6 +736,12 @@ function sendPage(res, filePath) {
 
 app.get('/', (_req, res) => sendPage(res, INDEX_HTML));
 app.get('/admin', (_req, res) => sendPage(res, ADMIN_HTML));
+app.get('/TELEGRAM.md', (_req, res) => {
+  const doc = path.join(__dirname, 'TELEGRAM.md');
+  if (!fs.existsSync(doc)) return res.status(404).send('Not found');
+  res.type('text/plain; charset=utf-8');
+  res.sendFile(doc);
+});
 
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(
@@ -681,6 +768,23 @@ const HOST = process.env.HOST || '0.0.0.0';
 const server = app.listen(PORT, HOST, () => {
   console.log(`DVIN ${SITE_BUILD} → http://${HOST}:${PORT}`);
   console.log('  Сайт: /  Админ: /admin  Health: /health');
+  if (telegram.isConfigured()) {
+    console.log('  Telegram: включён');
+    const url = getSiteUrl();
+    if (url.startsWith('https://')) {
+      setTimeout(() => {
+        telegram
+          .setupWebhook(url)
+          .then((r) => {
+            if (r.setWebhook?.ok) console.log('  Telegram webhook: OK');
+            else console.log('  Telegram webhook:', r.setWebhook?.description || 'не установлен');
+          })
+          .catch((e) => console.error('  Telegram webhook:', e.message));
+      }, 1500);
+    } else {
+      console.log('  Telegram: задайте SITE_URL=https://... для /start у бота');
+    }
+  }
 });
 
 server.on('error', (err) => {

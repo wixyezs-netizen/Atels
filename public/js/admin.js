@@ -60,6 +60,7 @@
       a.classList.add('active');
       $$('.panel').forEach((p) => p.classList.remove('active'));
       $(`#panel-${id}`).classList.add('active');
+      if (id === 'telegram') loadTelegramPanel();
     });
   });
 
@@ -352,6 +353,38 @@
     });
     await api('/api/admin/gallery', { method: 'PUT', body: { photos } });
     toast('Галерея сохранена');
+  });
+
+  async function loadTelegramPanel() {
+    const el = $('#telegram-status-text');
+    const urlEl = $('#telegram-webhook-url');
+    if (!el) return;
+    try {
+      const s = await api('/api/admin/telegram');
+      if (s.configured) {
+        const chats =
+          s.chatCount > 0
+            ? `Получателей: <b>${s.chatCount}</b> (${s.chatIdsPreview.join(', ')})`
+            : 'Напишите боту <code>/start</code> или укажите <code>TELEGRAM_CHAT_ID</code>.';
+        el.innerHTML = `✅ Бот подключён. ${chats}`;
+      } else {
+        el.innerHTML =
+          '⚠️ Задайте <code>TELEGRAM_BOT_TOKEN</code> в переменных Bothost и передеплойте.';
+      }
+      if (urlEl) urlEl.textContent = s.webhookUrl;
+    } catch (err) {
+      el.textContent = err.message;
+    }
+  }
+
+  $('#telegram-test-btn')?.addEventListener('click', async () => {
+    try {
+      await api('/api/admin/telegram/test', { method: 'POST' });
+      toast('Тест отправлен в Telegram');
+      loadTelegramPanel();
+    } catch (err) {
+      toast(err.message);
+    }
   });
 
   async function loadSettingsForm() {

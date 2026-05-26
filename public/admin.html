@@ -26,6 +26,7 @@
         <a href="#" data-panel="reviews">Отзывы <span class="badge" id="badge-reviews"></span></a>
         <a href="#" data-panel="rooms">Номера</a>
         <a href="#" data-panel="gallery">Галерея</a>
+        <a href="#" data-panel="telegram">Telegram</a>
         <a href="#" data-panel="settings">Настройки</a>
         <a href="#" data-panel="security">Пароль</a>
         <a href="/" target="_blank">Открыть сайт ↗</a>
@@ -88,6 +89,27 @@
           <button class="btn btn--primary" id="save-gallery-btn">Сохранить галерею</button>
         </div>
         <div id="gallery-admin" class="gallery-admin"></div>
+      </section>
+
+      <section class="panel" id="panel-telegram">
+        <h1>Telegram-уведомления</h1>
+        <div class="telegram-panel" id="telegram-panel">
+          <p id="telegram-status-text">Загрузка…</p>
+          <button type="button" class="btn btn--primary" id="telegram-test-btn">Отправить тест</button>
+          <div class="telegram-hint">
+            <h2>Настройка</h2>
+            <ol>
+              <li>Создайте бота в <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a></li>
+              <li>В Bothost добавьте <code>TELEGRAM_BOT_TOKEN</code> и <code>TELEGRAM_CHAT_ID</code></li>
+              <li>Передеплойте и напишите боту <code>/start</code></li>
+            </ol>
+            <h2>TVIL.ru</h2>
+            <p>Прямого API у TVIL нет. Подключите письма с заявками через Make/Zapier на вебхук:</p>
+            <p><code id="telegram-webhook-url">—</code></p>
+            <p>Заголовок: <code>X-Webhook-Secret</code> = ваш <code>WEBHOOK_SECRET</code></p>
+            <p><a href="/TELEGRAM.md" target="_blank" rel="noopener">Подробная инструкция →</a></p>
+          </div>
+        </div>
       </section>
 
       <section class="panel" id="panel-settings">

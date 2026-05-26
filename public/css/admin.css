@@ -82,6 +82,13 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: va
 .toast { position: fixed; bottom: 1rem; right: 1rem; background: var(--sidebar); color: #fff; padding: .75rem 1.25rem; border-radius: 8px; opacity: 0; transition: opacity .3s; z-index: 200; }
 .toast.show { opacity: 1; }
 
+.telegram-panel { max-width: 640px; }
+.telegram-hint { margin-top: 1.5rem; padding: 1rem 1.25rem; background: var(--card); border-radius: 10px; border: 1px solid var(--border); font-size: .92rem; }
+.telegram-hint h2 { font-size: 1rem; margin: 1rem 0 .5rem; }
+.telegram-hint h2:first-child { margin-top: 0; }
+.telegram-hint code { background: var(--bg); padding: .1rem .35rem; border-radius: 4px; font-size: .85em; word-break: break-all; }
+#telegram-webhook-url { display: block; margin: .5rem 0; }
+
 @media (max-width: 768px) {
   .layout { flex-direction: column; }
   .sidebar { width: 100%; }
