@@ -60,7 +60,9 @@ function requestJson(urlStr) {
       path: url.pathname + url.search,
       method: 'GET',
       headers: {
-        Accept: 'application/json, application/vnd.api+json, text/json, */*',
+        // TVIL отвечает в JSON:API и может возвращать 406, если Accept "не тот".
+        Accept: 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
         'Accept-Language': 'ru-RU,ru;q=0.9',
         Cookie: getCookie(),
         Origin: 'https://tvil.ru',
@@ -83,9 +85,20 @@ function requestJson(urlStr) {
           return reject(new Error('TVIL: сессия истекла — обновите TVIL_COOKIE'));
         }
         if (res.statusCode >= 400) {
-          return reject(
-            new Error(`TVIL HTTP ${res.statusCode}: ${body.trim().slice(0, 150).replace(/\s+/g, ' ')}`)
-          );
+          // Часто TVIL возвращает JSON:API errors даже на 4xx — пробуем распарсить, чтобы показать причину.
+          const trimmedErr = body.trim();
+          if (trimmedErr && !trimmedErr.startsWith('<')) {
+            try {
+              const j = JSON.parse(trimmedErr);
+              const first =
+                j?.errors?.[0]?.title ||
+                j?.errors?.[0]?.detail ||
+                j?.message ||
+                trimmedErr.slice(0, 160);
+              return reject(new Error(`TVIL HTTP ${res.statusCode}: ${String(first)}`));
+            } catch (_) {}
+          }
+          return reject(new Error(`TVIL HTTP ${res.statusCode}: ${trimmedErr.slice(0, 160).replace(/\s+/g, ' ')}`));
         }
         const trimmed = body.trim();
         if (!trimmed) {
