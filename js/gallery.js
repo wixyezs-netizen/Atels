@@ -1,4 +1,6 @@
 (function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
   const GRID = document.getElementById('gallery-grid');
   const MARQUEE = document.getElementById('marquee');
   const THUMBS = document.getElementById('overview-thumbs');

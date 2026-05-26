@@ -1,4 +1,6 @@
 (function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
   document.querySelectorAll('.reveal').forEach((el, i) => {
     el.style.transitionDelay = `${Math.min(i * 0.06, 0.4)}s`;
     const obs = new IntersectionObserver(
